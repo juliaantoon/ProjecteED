@@ -474,7 +474,7 @@ Seguidament teniu un diagrama no formal que descriu els elements rellevants de l
 
 ## 3.3 Lliurament
 
-Per a fer el lliurament del projecte caldrà fer un upload dels fitxers de la vostra pràctica dins el Caronte. La llista dels arxius necessaris són (fixeu-vos que "cfg.py" no està inclòs):
+Per a fer el lliurament del projecte caldrà fer un upload dels fitxers de la vostra pràctica dins el Gradescope. La llista dels arxius necessaris són (fixeu-vos que "cfg.py" no està inclòs):
 
 - **p1_main.py**
 - **ImageFiles.py ; ImageID.py ; ImageData.py ; Gallery.py ; SearchMetadata.py**
