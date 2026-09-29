@@ -53,3 +53,18 @@ Notes:
     - Els operadors lògics NO modifiquen les llistes originals
     - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
+import ImageData
+class SearchMetadata:
+
+    def __init__(self, uuid):
+        self.image_data = ImageData.ImageData(uuid)  # instància de la classe ImageData per accedir a les metadades
+
+    def prompt(self, sub: str) -> list:
+
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:#sha de ttribar el diccionaride uuids i la seva METADATA
+
+            if sub in self.image_data.get_prompt(uuid):
+                llista_uuids.append(uuid)
+        #ns com va lo str.find()
