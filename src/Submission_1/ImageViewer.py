@@ -79,7 +79,7 @@ class ImageViewer:
             print(f"Error en mostrar la imatge: {e}")
 
     def show_image(self, uuid: str, mode: int) -> None:
-        file_path = #nose com trobar el path de l'uuid
+        file_path = ImageID.get_pa #nose com trobar el path de l'uuid
         if mode == 0:
             self.print_image(uuid)
         elif mode == 1:
