@@ -73,7 +73,7 @@ def get_uuid(filename: str = "") -> str:
     return uuid.uuid5(uuid.NAMESPACE_URL, filename)
 
 def get_canonical_pathfile(filename: str) -> str:
-    """Retorna el pathname relatiu amb un format universal."""
+    """Retorna el pathname relatiu amb un format universal. Agafa qualsevol format"""
     """Exemple: subdir1/subdir2/image01.png"""
     file = os.path.normpath(filename)
     file = os.path.relpath(file, ROOT_DIR)

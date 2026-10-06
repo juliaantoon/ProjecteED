@@ -67,4 +67,71 @@ class SearchMetadata:
 
             if sub in self.image_data.get_prompt(uuid):
                 llista_uuids.append(uuid)
-        #ns com va lo str.find()
+
+        return llista_uuids
+
+    def model(self, sub: str) -> list:
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:
+
+            if sub in self.image_data.get_model(uuid):
+                llista_uuids.append(uuid)
+
+        return llista_uuids
+
+    def seed(self, sub: str) -> list:
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:
+
+            if sub in self.image_data.get_seed(uuid):
+                llista_uuids.append(uuid)
+
+        return llista_uuids
+
+    def cfg_scale(self, sub: str) -> list:
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:
+
+            if sub in self.image_data.get_cfg_scale(uuid):
+                llista_uuids.append(uuid)
+
+        return llista_uuids
+
+    def steps(self, sub: str) -> list:
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:
+
+            if sub in self.image_data.get_steps(uuid):
+                llista_uuids.append(uuid)
+
+        return llista_uuids
+
+    def sampler(self, sub: str) -> list:
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:
+
+            if sub in self.image_data.get_sampler(uuid):
+                llista_uuids.append(uuid)
+
+        return llista_uuids
+
+    def date(self, sub: str) -> list:
+        llista_uuids=[]
+
+        for uuid in self.image_data.get_dicciomari:
+
+            if sub in self.image_data.get_created_date(uuid):
+                llista_uuids.append(uuid)
+
+        return llista_uuids
+
+    def and_operator(self, list1: list, list2: list) -> list:
+        return list(set(list1) & set(list2))  # Intersecció de conjunts
+
+    def or_operator(self, list1: list, list2: list) -> list:
+        return list(set(list1) | set(list2))  # Unió de conjunts
