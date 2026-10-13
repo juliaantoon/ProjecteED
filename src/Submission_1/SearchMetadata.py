@@ -53,13 +53,6 @@ Notes:
     - Els operadors lògics NO modifiquen les llistes originals
     - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
-<<<<<<< HEAD
-=======
-
-# amb un metode general perl bucle:
-
-
->>>>>>> 4258aa3776555008c75251677edf2058d8e2f935
 class SearchMetadata:
 
     def __init__(self, image_data=None):
