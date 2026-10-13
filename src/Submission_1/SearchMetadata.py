@@ -56,82 +56,61 @@ Notes:
 import ImageData
 class SearchMetadata:
 
-    def __init__(self, uuid):
-        self.image_data = ImageData.ImageData(uuid)  # instància de la classe ImageData per accedir a les metadades
+    def __init__(self, image_data=None):
+        self._image_data = image_data  # Instància d'ImageData
+
+    def _cercar(self, funcio_getter, sub: str) -> list:
+        llista_uuids = []
+        if self._image_data is None:
+            return llista_uuids
+        for uuid in self._image_data._images:
+            valor = funcio_getter(uuid)
+            if valor is not None and str(valor).find(sub) != -1:
+                llista_uuids.append(uuid)
+        return llista_uuids
 
     def prompt(self, sub: str) -> list:
-
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:#sha de ttribar el diccionaride uuids i la seva METADATA
-
-            if sub in self.image_data.get_prompt(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
+        return self._cercar(self._image_data.get_prompt, sub)
 
     def model(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_model(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
+        return self._cercar(self._image_data.get_model, sub)
 
     def seed(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_seed(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
+        return self._cercar(self._image_data.get_seed, sub)
 
     def cfg_scale(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_cfg_scale(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
+        return self._cercar(self._image_data.get_cfg_scale, sub)
 
     def steps(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_steps(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
+        return self._cercar(self._image_data.get_steps, sub)
 
     def sampler(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_sampler(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
+        return self._cercar(self._image_data.get_sampler, sub)
 
     def date(self, sub: str) -> list:
-        llista_uuids=[]
+        return self._cercar(self._image_data.get_created_date, sub)
 
-        for uuid in self.image_data.get_dicciomari:
+    def generated(self, sub: str) -> list:
+        if self._image_data is None:
+            return []
+        return self._cercar(self._image_data.get_generated, sub)
 
-            if sub in self.image_data.get_created_date(uuid):
+    def dimensions(self, width: int, height: int) -> list:
+        llista_uuids = []
+        if self._image_data is None:
+            return llista_uuids
+        for uuid in self._image_data._images:
+            dims = self._image_data.get_dimensions(uuid)
+            if dims is not None and tuple(dims) == (width, height):
                 llista_uuids.append(uuid)
-
         return llista_uuids
 
     def and_operator(self, list1: list, list2: list) -> list:
-        return list(set(list1) & set(list2))  # Intersecció de conjunts
+        return list(set(list1) & set(list2))
 
     def or_operator(self, list1: list, list2: list) -> list:
-        return list(set(list1) | set(list2))  # Unió de conjunts
+        return list(set(list1) | set(list2))
+
+    def __str__(self) -> str:
+        total = len(self._image_data) if self._image_data else 0
+        return f"SearchMetadata(imatges={total})"
