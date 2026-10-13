@@ -36,25 +36,30 @@ class ImageFiles:
         self._files = set()
         self._added = []
         self._removed = []
+        self._path = None  # path base per recórrer el filesystem (ROOT_DIR per defecte)
 
     def reload_fs(self, path: str = None) -> None:
-        if path is None:
-            path = cfg.ROOT_DIR
+        # Si ens passen un path nou, l'actualitzem; si no, fem servir l'últim conegut o cfg.ROOT_DIR
+        if path is not None:
+            self._path = path
+        elif self._path is None:
+            self._path = cfg.ROOT_DIR
 
+        target_path = self._path
         new_files = set()
 
-        for root, dirs, files in os.walk(path): # recorre recursivament tots els subdirectoris a partir del path especificat
-            for file in files:
-                if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
-                    full_path = os.path.join(root, file) # obtenim el path complet de l'arxiu
-                    rel_path = os.path.relpath(full_path, path) # obtenim el path relatiu a partir del path especificat (perque funcioni en qualsevol sistema operatiu)
-                    rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
-                    new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
-        
-        self._added = list(new_files - self._files) # llista dels arcxius afegits
-        self._removed = list(self._files - new_files) # llista dels arxius eliminats
-        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius 
+        if os.path.exists(target_path):
+            for root, dirs, files in os.walk(target_path): # recorre recursivament tots els subdirectoris a partir del path especificat
+                for file in files:
+                    if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
+                        full_path = os.path.join(root, file) # obtenim el path complet de l'arxiu
+                        rel_path = os.path.relpath(full_path, target_path) # obtenim el path relatiu a partir del path especificat
+                        rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
+                        new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
 
+        self._added = list(new_files - self._files) # llista dels arxius afegits
+        self._removed = list(self._files - new_files) # llista dels arxius eliminats
+        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius
     def files_added(self) -> list:
         return self._added
 
