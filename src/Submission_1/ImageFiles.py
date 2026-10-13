@@ -36,35 +36,38 @@ class ImageFiles:
         self._files = set()
         self._added = []
         self._removed = []
-        self._path = None  # path base per recórrer el filesystem (ROOT_DIR per defecte)
+        self._path = None
 
     def reload_fs(self, path: str = None) -> None:
-        # Si ens passen un path nou, l'actualitzem; si no, fem servir l'últim conegut o cfg.ROOT_DIR
         if path is not None:
             self._path = path
         elif self._path is None:
             self._path = cfg.ROOT_DIR
 
-        target_path = self._path
+        base_dir = self._path
         new_files = set()
 
-        if os.path.exists(target_path):
-            for root, dirs, files in os.walk(target_path): # recorre recursivament tots els subdirectoris a partir del path especificat
+        if os.path.exists(base_dir):
+            for root, dirs, files in os.walk(base_dir): # recorre recursivament tots els subdirectoris a partir del path especificat
                 for file in files:
                     if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
                         full_path = os.path.join(root, file) # obtenim el path complet de l'arxiu
-                        rel_path = os.path.relpath(full_path, target_path) # obtenim el path relatiu a partir del path especificat
+                        rel_path = os.path.relpath(full_path, base_dir) # obtenim el path relatiu a partir del path especificat (perque funcioni en qualsevol sistema operatiu)
                         rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
                         new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
-
-        self._added = list(new_files - self._files) # llista dels arxius afegits
+        
+        self._added = list(new_files - self._files) # llista dels arcxius afegits
         self._removed = list(self._files - new_files) # llista dels arxius eliminats
-        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius
+        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius 
+
     def files_added(self) -> list:
         return self._added
 
     def files_removed(self) -> list:
         return self._removed
+
+    def __len__(self) -> int:
+        return len(self._files)
 
     def __str__(self) -> str:
         return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"
