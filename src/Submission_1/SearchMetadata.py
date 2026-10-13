@@ -53,96 +53,13 @@ Notes:
     - Els operadors lògics NO modifiquen les llistes originals
     - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
-import ImageData
-class SearchMetadata:
-
-    def __init__(self, uuid):
-        self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
-
-    def prompt(self, sub: str) -> list:
-
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:#sha de ttribar el diccionaride uuids i la seva METADATA
-
-            if sub in self.image_data.get_prompt(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def model(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_model(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def seed(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_seed(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def cfg_scale(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_cfg_scale(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def steps(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_steps(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def sampler(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_sampler(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def date(self, sub: str) -> list:
-        llista_uuids=[]
-
-        for uuid in self.image_data.get_dicciomari:
-
-            if sub in self.image_data.get_created_date(uuid):
-                llista_uuids.append(uuid)
-
-        return llista_uuids
-
-    def and_operator(self, list1: list, list2: list) -> list:
-        return list(set(list1) & set(list2))  # Intersecció de conjunts
-
-    def or_operator(self, list1: list, list2: list) -> list:
-        return list(set(list1) | set(list2))  # Unió de conjunts
-
 
 # amb un metode general perl bucle:
 
 
 class SearchMetadata:
     
-    def __init__(self, image_data):
+    def __init__(self, image_data = None):
         self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
 
     def _cercar (self, funcio_getter, sub:str) -> list:
@@ -177,8 +94,27 @@ class SearchMetadata:
     def date (self, sub: str) -> list:
         return self._cercar(self._image_data.get_created_date, sub) # busca la subcadena en el camp Created_Date de les metadades de les imatges
 
+    def generated(self, sub: str) -> list:
+        if self._image_data is None:
+            return []
+        return self._cercar(self._image_data.get_generated, sub)
+
+    def dimensions(self, width: int, height: int) -> list:
+        llista_uuids = []
+        if self._image_data is None:
+            return llista_uuids
+        for uuid in self._image_data._images:
+            dims = self._image_data.get_dimensions(uuid)
+            if dims is not None and tuple(dims) == (width, height):
+                llista_uuids.append(uuid)
+        return llista_uuids
+
     def and_operator(self, list1: list, list2: list) -> list: # intersecció de conjunts
         return list(set(list1) & set(list2))  
 
     def or_operator(self, list1: list, list2: list) -> list: # unió de conjunts
         return list(set(list1) | set(list2))  
+
+    def __str__(self) -> str:
+        total = len(self._image_data) if self._image_data else 0
+        return f"SearchMetadata(imatges={total})"

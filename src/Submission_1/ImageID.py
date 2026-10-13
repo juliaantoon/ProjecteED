@@ -37,7 +37,8 @@ class ImageID:
     def __init__(self):
         self._file_to_uuid = {}        # diccionari per saber quin uuid té cada fitxer
         self._active_uuids = set()     # conjunt per saber quins uuid estan actius (evita duplicats)
-
+        self._uuid_to_file = {}        # diccionari per saber quin fitxer té cada uuid (opcional, si voleu fer cerques inverses)    
+    
     def generate_uuid(self, file: str) -> str:
         new_uuid = str(cfg.get_uuid(file))  # generem un nou uuid 
 
@@ -47,6 +48,7 @@ class ImageID:
         else:
             self._active_uuids.add(new_uuid)
             self._file_to_uuid[file] = new_uuid
+            self._uuid_to_file[new_uuid] = file
             return new_uuid
 
     def get_uuid(self, file: str) -> str:
@@ -63,31 +65,5 @@ class ImageID:
                 if self._file_to_uuid[file] == uuid:
                     del self._file_to_uuid[file]  # esborrem el fitxer del diccionari
                     break
-
-
-# COMPROVACIÓ 
-if __name__ == "__main__":
-    gestor_id = ImageID()
-
-    print("--- 1. GENERAR UUID ---")
-    foto = "animals/gat.png"
-    uuid_generat = gestor_id.generate_uuid(foto)
-    print(f"Fitxer: {foto} -> UUID: {uuid_generat}")
-
-    print("\n--- 2. CONSULTAR UUID (get_uuid) ---")
-    consulta_existent = gestor_id.get_uuid(foto)
-    print(f"Consulta d'arxiu existent ({foto}): {consulta_existent}")
-
-    consulta_inexistent = gestor_id.get_uuid("inexistent.png")
-    print(f"Consulta d'arxiu desconegut: {consulta_inexistent}")
-
-    print("\n--- 3. ELIMINAR UUID (remove_uuid) ---")
-    print(f"Eliminant UUID: {uuid_generat}...")
-    gestor_id.remove_uuid(uuid_generat)
-
-    comprovacio_despres = gestor_id.get_uuid(foto)
-    print(f"Consulta de {foto} després d'esborrar: {comprovacio_despres}")
-    print(f"Està el UUID encara a la llista d'actius?: {uuid_generat in gestor_id._active_uuids}")
-        
 
 

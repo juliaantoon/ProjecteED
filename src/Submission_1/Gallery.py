@@ -54,22 +54,22 @@ import cfg
 
 
 class Gallery:
-    def __init__(self, viewer=None, image_id=None):
+    def __init__(self, image_id=None, image_viewer=None):
         self._gallery_name = ""  # nom de la galeria
         self._description = ""  # descripcio del contingut de la galeria
         self._created_date = ""  # data de creacio de la galeria
         self._images = []  # llista d'UUID de les imatges que pertanyen a la galeria
-        self._viewer = viewer  # instància de la classe ImageViewer per mostrar les imatges
+        self._viewer = image_viewer  # instància de la classe ImageViewer per mostrar les imatges
         self._image_id = image_id  # instància de la classe ImageID per obtenir els UUID de les imatges
 
-    def set_viewer(self, viewer) -> None:  # assigna o actualitza el visualitzador d'imatges
-        self._viewer = viewer
+    def set_viewer(self, image_viewer) -> None:  # assigna o actualitza el visualitzador d'imatges
+        self._viewer = image_viewer
 
     def set_image_id(self, image_id) -> None:  # assigna o actualitza el gestor ImageID
         self._image_id = image_id
 
     def load_file(self, file: str) -> None:
-        if not os.path.isfile(file) and hasattr(cfg, "ROOT_DIR"):  # comprova si el fitxer és relatiu a ROOT_DIR
+        if not os.path.isfile(file):  # comprova si el fitxer és relatiu a ROOT_DIR
             full_path = os.path.join(cfg.ROOT_DIR, file)  # construeix la ruta sencera
         else:
             full_path = file  # usa la ruta directa
@@ -113,3 +113,9 @@ class Gallery:
     def remove_last_image(self) -> None:  # elimina l'última imatge de la galeria
         if len(self._images) > 0:
             self._images.pop()
+
+    def __len__(self) -> int:  # retorna el nombre d'imatges de la galeria
+        return len(self._images)
+
+    def __str__(self) -> str:  # representació en text de la galeria
+        return f"Gallery('{self._gallery_name}', imatges={len(self._images)})

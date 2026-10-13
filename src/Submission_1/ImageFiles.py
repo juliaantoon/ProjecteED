@@ -39,7 +39,7 @@ class ImageFiles:
 
     def reload_fs(self, path: str = None) -> None:
         if path is None:
-            path = cfg.get_root() # si quien llama a la funcion no especifica un path, se utiliza el ROOT_DIR de cfg.py
+            path = cfg.ROOT_DIR
 
         new_files = set()
 
@@ -48,6 +48,7 @@ class ImageFiles:
                 if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
                     full_path = os.path.join(root, file) # obtenim el path complet de l'arxiu
                     rel_path = os.path.relpath(full_path, path) # obtenim el path relatiu a partir del path especificat (perque funcioni en qualsevol sistema operatiu)
+                    rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
                     new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
         
         self._added = list(new_files - self._files) # llista dels arcxius afegits
@@ -61,10 +62,5 @@ class ImageFiles:
     def files_removed(self) -> list:
         return self._removed
 
-# COMPROVACIÓ PER VEURE SI FUNCIONA
-if __name__ == "__main__":
-    gestor = ImageFiles()
-    print("--- 1a LECTURA ---")
-    gestor.reload_fs()  
-    print("Imatges trobades (afegides):", gestor.files_added())
-    print("Imatges eliminades:", gestor.files_removed())
+    def __str__(self) -> str:
+        return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)}))"
