@@ -53,11 +53,10 @@ Notes:
     - Els operadors lògics NO modifiquen les llistes originals
     - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
-import ImageData
 class SearchMetadata:
 
     def __init__(self, image_data=None):
-        self._image_data = image_data  # Instància d'ImageData
+        self._image_data = image_data
 
     def _cercar(self, funcio_getter, sub: str) -> list:
         llista_uuids = []

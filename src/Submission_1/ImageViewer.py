@@ -46,11 +46,10 @@ Notes:
 """
 import cfg
 import PIL.Image as Image
-import ImageData
 
 class ImageViewer:
-    def __init__(self):
-        self.image_data = ImageData.ImageData()  
+    def __init__(self, image_data=None):
+        self.image_data = image_data
 
     def set_image_data(self, image_data: object) -> None:   # ens permet actualitxar el objecte ImageData si cal
         self.image_data = image_data
@@ -59,6 +58,11 @@ class ImageViewer:
         if self._image_data is None:
             print("Error: No s'ha configurat cap instància d'ImageData a ImageViewer.")
             return
+        
+        file_path = self._image_data.get_filename(uuid)
+        prompt_val = self._image_data.get_prompt(uuid)
+        if prompt_val and prompt_val != "None" and len(prompt_val) > 50:
+            prompt_val = prompt_val[:50] + "..."
         
         metadata = {
             "Dimensions": self._image_data.get_dimensions(uuid),
@@ -74,19 +78,18 @@ class ImageViewer:
             "Path": file_path
         }
 
-        # Imprimim les metadades de manera llegible
         print("Metadades de la imatge:")
         for key, value in metadata.items():
             if key == "Prompt" and value is not None and len(value) > 50:
                 value = value[:50] + "..."  # Truncar el prompt si és molt llarg
             print(f"{key}: {value}")
 
-    def show_file(self, file: str) -> None: # Mostra la imatge especificada utilitzant PIL 
+    def show_file(self, file: str) -> None:
         try:
-            img = Image.open(file)  # Obrim la imatge amb Pillow
-            img.show()  # Obre el visor d'imatges del sistema operatiu
+            with Image.open(file) as img:
+                img.show()
         except Exception as e:
-            print(f"Error en mostrar el fitxer '{file}': {e}")  # Gestió d'errors si la imatge no existeix 
+            print(f"Error en mostrar el fitxer '{file}': {e}")
 
     def show_image(self, uuid: str, mode: int = None) -> None:
         if mode is None:
@@ -113,3 +116,7 @@ class ImageViewer:
                 input("\nPrem [ENTER] per continuar després de tancar la imatge...")
         else:
             print(f"Mode desconegut: {mode}. Utilitzeu 0, 1 o 2.")
+
+    def __str__(self) -> str:
+        estat = "connectat" if self._image_data  is not None else "desconnectat"
+        return f"ImageViewer(estat={estat})"
