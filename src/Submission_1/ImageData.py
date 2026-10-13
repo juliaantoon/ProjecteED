@@ -64,7 +64,7 @@ import cfg
 
 class ImageData:
 
-    def __init__(self):
+    def __init__(self, image_id=None):
         self._images = {}  # Diccionari principal: clau UUID -> diccionari de dades
         self._image_id = image_id
 
@@ -83,23 +83,20 @@ class ImageData:
         }
 
     def remove_image(self, uuid: str) -> None:
-        if uuid in self._images:
+        if uuid in self._images: # comprovem si l'uuid existeix abans d'eliminar-lo
             del self._images[uuid]
 
     def load_metadata(self, uuid: str) -> None:
         if uuid not in self._images:
             return
 
-        ruta_fitxer = self._images[uuid]["file"]
+        ruta_fitxer = self._images[uuid]["file"] # agafem la ruta del fitxer associada a l'UUID
 
         try:
-            with Image.open(ruta_fitxer) as img:
-                self._images[uuid]["dimensions"] = (img.width, img.height)
-                # Backup de metadades si cfg no les proporciona
-                raw_text = getattr(img, "text", {}) or {}
+            with Image.open(ruta_fitxer) as img: # obrim la imatge amb pillow
+                self._images[uuid]["dimensions"] = (img.width, img.height) # guardem les mides de la imatge com a tupla (width, height)
         except Exception:
             self._images[uuid]["dimensions"] = (0, 0)
-            raw_text = {}
 
         try:
             metadades = cfg.read_png_metadata(ruta_fitxer) or {}
@@ -120,47 +117,47 @@ class ImageData:
             return self._images[uuid].get("file", "None")
         return "None"
 
-    def get_prompt(self, uuid: str) -> str:
+    def get_prompt(self, uuid: str) -> str:  # Retorna el prompt utilitzat per generar la imatge
         if uuid in self._images:
             return self._images[uuid].get("prompt", "None")
         return "None"
 
-    def get_model(self, uuid: str) -> str:
+    def get_model(self, uuid: str) -> str:  # Retorna el model d'IA utilitzat 
         if uuid in self._images:
             return self._images[uuid].get("model", "None")
         return "None"
 
-    def get_seed(self, uuid: str) -> str:
+    def get_seed(self, uuid: str) -> str:  # Retorna la llavor aleatòria utilitzada en la generació
         if uuid in self._images:
             return self._images[uuid].get("seed", "None")
         return "None"
 
-    def get_cfg_scale(self, uuid: str) -> str:
+    def get_cfg_scale(self, uuid: str) -> str:  # Retorna el guidance scale utilitzat
         if uuid in self._images:
             return self._images[uuid].get("cfg_scale", "None")
         return "None"
 
-    def get_steps(self, uuid: str) -> str:
+    def get_steps(self, uuid: str) -> str:  # Retorna el nombre de passos d'iteració del model
         if uuid in self._images:
             return self._images[uuid].get("steps", "None")
         return "None"
 
-    def get_sampler(self, uuid: str) -> str:
+    def get_sampler(self, uuid: str) -> str:  # Retorna l'algorisme de mostreig utilitzat
         if uuid in self._images:
             return self._images[uuid].get("sampler", "None")
         return "None"
 
-    def get_generated(self, uuid: str) -> str:
+    def get_generated(self, uuid: str) -> str:  # Retorna "true" si la imatge està marcada com a generada
         if uuid in self._images:
             return self._images[uuid].get("generated", "None")
         return "None"
 
-    def get_created_date(self, uuid: str) -> str:
+    def get_created_date(self, uuid: str) -> str:  # Retorna la data de creació en format YYYY-MM-DD
         if uuid in self._images:
             return self._images[uuid].get("created_date", "None")
         return "None"
 
-    def get_dimensions(self, uuid: str) -> tuple:
+    def get_dimensions(self, uuid: str) -> tuple:  # Retorna una tupla (width, height) amb les dimensions de la imatge
         if uuid in self._images:
             return self._images[uuid].get("dimensions", (0, 0))
         return (0, 0)

@@ -56,7 +56,7 @@ Notes:
 class SearchMetadata:
 
     def __init__(self, image_data=None):
-        self._image_data = image_data
+        self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
 
     def _cercar(self, funcio_getter, sub: str) -> list:
         llista_uuids = []
@@ -68,26 +68,26 @@ class SearchMetadata:
                 llista_uuids.append(uuid)
         return llista_uuids
 
-    def prompt(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_prompt, sub)
+    def prompt(self, sub: str) -> list: 
+        return self._cercar(self._image_data.get_prompt, sub) # busca la subcadena en el camp Prompt de les metadades de les imatges
 
     def model(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_model, sub)
+        return self._cercar(self._image_data.get_model, sub) # busca la subcadena en el camp Model de les metadades de les imatges
 
     def seed(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_seed, sub)
+        return self._cercar(self._image_data.get_seed, sub) # busca la subcadena en el camp Seed de les metadades de les imatges
 
     def cfg_scale(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_cfg_scale, sub)
+        return self._cercar(self._image_data.get_cfg_scale, sub) # busca la subcadena en el camp CFG_Scale de les metadades de les imatges
 
     def steps(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_steps, sub)
+        return self._cercar(self._image_data.get_steps, sub) # busca la subcadena en el camp Steps de les metadades de les imatges
 
     def sampler(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_sampler, sub)
+        return self._cercar(self._image_data.get_sampler, sub) # busca la subcadena en el camp Sampler de les metadades de les imatges
 
     def date(self, sub: str) -> list:
-        return self._cercar(self._image_data.get_created_date, sub)
+        return self._cercar(self._image_data.get_created_date, sub) # busca la subcadena en el camp Created_Date de les metadades de les imatges
 
     def generated(self, sub: str) -> list:
         if self._image_data is None:
@@ -104,11 +104,11 @@ class SearchMetadata:
                 llista_uuids.append(uuid)
         return llista_uuids
 
-    def and_operator(self, list1: list, list2: list) -> list:
-        return list(set(list1) & set(list2))
+    def and_operator(self, list1: list, list2: list) -> list: # intersecció de conjunts
+        return list(set(list1) & set(list2))  
 
-    def or_operator(self, list1: list, list2: list) -> list:
-        return list(set(list1) | set(list2))
+    def or_operator(self, list1: list, list2: list) -> list: # unió de conjunts
+        return list(set(list1) | set(list2))  
 
     def __str__(self) -> str:
         total = len(self._image_data) if self._image_data else 0

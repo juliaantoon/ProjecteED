@@ -55,7 +55,6 @@ class ImageFiles:
         self._removed = list(self._files - new_files) # llista dels arxius eliminats
         self._files = new_files # actualitzem la llista d'arxius amb els nous arxius 
 
-
     def files_added(self) -> list:
         return self._added
 
@@ -63,4 +62,4 @@ class ImageFiles:
         return self._removed
 
     def __str__(self) -> str:
-        return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)}))"
+        return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"

@@ -118,4 +118,4 @@ class Gallery:
         return len(self._images)
 
     def __str__(self) -> str:  # representació en text de la galeria
-        return f"Gallery('{self._gallery_name}', imatges={len(self._images)})
+        return f"Gallery('{self._gallery_name}', imatges={len(self._images)})"

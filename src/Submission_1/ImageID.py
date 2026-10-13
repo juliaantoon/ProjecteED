@@ -65,5 +65,10 @@ class ImageID:
                 if self._file_to_uuid[file] == uuid:
                     del self._file_to_uuid[file]  # esborrem el fitxer del diccionari
                     break
+            self._uuid_to_file.pop(uuid, None)
 
+    def __len__(self) -> int:
+        return len(self._file_to_uuid)
 
+    def __str__(self) -> str:
+        return f"ImageID(identificadors={len(self._file_to_uuid)})"
