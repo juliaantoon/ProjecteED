@@ -44,7 +44,7 @@ Notes:
     - Gestioneu les excepcions si la imatge no es pot mostrar
     - El format de sortida ha de ser llegible i ben organitzat
 """
-import cfg
+import cfg, os
 from PIL import Image
 
 class ImageViewer:
@@ -64,8 +64,11 @@ class ImageViewer:
         if prompt_val and prompt_val != "None" and len(prompt_val) > 50:
             prompt_val = prompt_val[:50] + "..."  # Truncar el prompt si és molt llarg
 
+        dims = self._image_data.get_dimensions(uuid)
+        dims_txt = f"{dims[0]} x {dims[1]}"
+
         metadata = {
-            "Dimensions": self._image_data.get_dimensions(uuid),
+            "Dimensions": dims_txt,
             "Prompt": prompt_val,
             "Model": self._image_data.get_model(uuid),
             "Seed": self._image_data.get_seed(uuid),
@@ -84,6 +87,8 @@ class ImageViewer:
             print(f"{key}: {value}")
 
     def show_file(self, file: str) -> None: # Mostra la imatge especificada utilitzant PIL 
+        if not os.path.isfile(file):
+            file = os.path.join(cfg.ROOT_DIR, file)
         try:
             with Image.open(file) as img:  # Obrim la imatge amb Pillow
                 img.show()  # Obre el visor d'imatges del sistema operatiu

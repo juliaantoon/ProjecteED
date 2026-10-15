@@ -51,6 +51,7 @@ Notes:
 import os
 import json
 import cfg
+from collections import deque
 
 
 class Gallery:
@@ -58,7 +59,7 @@ class Gallery:
         self._gallery_name = ""  # nom de la galeria
         self._description = ""  # descripcio del contingut de la galeria
         self._created_date = ""  # data de creacio de la galeria
-        self._images = []  # llista d'UUID de les imatges que pertanyen a la galeria
+        self._images = deque()  # llista d'UUID de les imatges que pertanyen a la galeria
         self._viewer = image_viewer  # instància de la classe ImageViewer per mostrar les imatges
         self._image_id = image_id  # instància de la classe ImageID per obtenir els UUID de les imatges
 
@@ -67,6 +68,20 @@ class Gallery:
 
     def set_image_id(self, image_id) -> None:  # assigna o actualitza el gestor ImageID
         self._image_id = image_id
+
+    def _find_uuid(self, img_path):
+        p = img_path.replace("\\", "/")
+        prefix = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) + "/"
+        candidats = [p]
+        if p.startswith(prefix):
+            candidats.append(p[len(prefix):])  # sense el prefix
+        else:
+            candidats.append(prefix + p)       # amb el prefix
+        for c in candidats:
+            uuid = self._image_id.get_uuid(c)
+            if uuid and uuid != "None":
+                return uuid
+        return None
 
     def load_file(self, file: str) -> None:
         if not os.path.isfile(file):  # comprova si el fitxer és relatiu a ROOT_DIR
@@ -80,13 +95,13 @@ class Gallery:
             self._gallery_name = data.get("gallery_name", "")
             self._description = data.get("description", "")
             self._created_date = data.get("created_date", "")
-            self._images = []  # reinicia la llista d'imatges
+            self._images = deque()  # reinicia la llista d'imatges
 
             raw_images = data.get("images", [])  # obté la llista d'imatges del JSON
             for img_path in raw_images:
                 if self._image_id is not None:
-                    uuid = self._image_id.get_uuid(img_path)  # obté l'UUID de la imatge a partir del path
-                    if uuid and uuid != "None":  # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
+                    uuid = self._find_uuid(img_path)  # obté l'UUID de la imatge a partir del path
+                    if uuid:  # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
                         self._images.append(uuid)
                 else:
                     self._images.append(img_path)
@@ -99,7 +114,7 @@ class Gallery:
             return
         print(f"Galeria: {self._gallery_name}")
         print(f"Descripció: {self._description}")
-        print(f"Total d'imatges: {len(self._images)}")
+        print(f"Total d'imatges: {len(self._images)}") ########
         for uuid in self._images:
             self._viewer.show_image(uuid)  # mostra cada imatge utilitzant el visualitzador
 
@@ -108,7 +123,7 @@ class Gallery:
 
     def remove_first_image(self) -> None:  # elimina la primera imatge de la galeria
         if len(self._images) > 0:
-            self._images.pop(0)
+            self._images.popleft()
 
     def remove_last_image(self) -> None:  # elimina l'última imatge de la galeria
         if len(self._images) > 0:

@@ -57,7 +57,7 @@ Notes:
     - Les dimensions es llegeixen amb img.width i img.height
     - Tots els camps de metadades es guarden com a strings
 """
-
+import os
 from PIL import Image
 import cfg
 
@@ -91,7 +91,9 @@ class ImageData:
             return
 
         ruta_fitxer = self._images[uuid]["file"] # agafem la ruta del fitxer associada a l'UUID
-
+        if not os.path.isfile(ruta_fitxer):                        # si el fitxer no existeix, intentem buscar-lo a ROOT_DIR
+            ruta_fitxer = os.path.join(cfg.ROOT_DIR, ruta_fitxer)
+        
         try:
             with Image.open(ruta_fitxer) as img: # obrim la imatge amb pillow
                 self._images[uuid]["dimensions"] = (img.width, img.height) # guardem les mides de la imatge com a tupla (width, height)
@@ -100,8 +102,10 @@ class ImageData:
 
         try:
             metadades = cfg.read_png_metadata(ruta_fitxer) or {}
+            
         except Exception:
             metadades = {}
+        metadades = {k.lower(): v for k, v in metadades.items()}
 
         self._images[uuid]["prompt"] = str(metadades.get("prompt", "None"))
         self._images[uuid]["model"] = str(metadades.get("model", "None"))

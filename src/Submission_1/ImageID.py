@@ -58,15 +58,12 @@ class ImageID:
             return None
 
     def remove_uuid(self, uuid: str) -> None:
-        if uuid in self._active_uuids:       # mirem si el uuid està actiu
-            self._active_uuids.remove(uuid)  # si hi és, l'alliberem del conjunt
-
-            for file in list(self._file_to_uuid.keys()):
-                if self._file_to_uuid[file] == uuid:
-                    del self._file_to_uuid[file]  # esborrem el fitxer del diccionari
-                    break
-            self._uuid_to_file.pop(uuid, None)
-
+        if uuid in self._active_uuids:
+            self._active_uuids.remove(uuid)
+            file = self._uuid_to_file.pop(uuid, None)
+            if file is not None:
+                self._file_to_uuid.pop(file, None)
+    
     def __len__(self) -> int:
         return len(self._file_to_uuid)
 
