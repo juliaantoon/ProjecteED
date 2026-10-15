@@ -84,6 +84,12 @@ class Gallery:
         return None
 
     def load_file(self, file: str) -> None:
+
+        self._gallery_name = ""             
+        self._description = ""              
+        self._created_date = ""             
+        self._images = deque() 
+
         if not os.path.isfile(file):  # comprova si el fitxer és relatiu a ROOT_DIR
             full_path = os.path.join(cfg.ROOT_DIR, file)  # construeix la ruta sencera
         else:
