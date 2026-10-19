@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 ImageData.py : ** REQUIRED ** El vostre codi de la classe ImageData.
@@ -102,9 +101,7 @@ class ImageData:
 
     def load_metadata(self, uuid: str) -> None:
         if uuid not in self._images:
-            if uuid: # si no es buida la variable uuid, llancem una excepció per indicar que no s'ha trobat
-                raise FileNotFoundError(f"UUID '{uuid}' no trobat a la col·lecció d'imatges.")
-            return # si es buida la variable uuid, simplement sortim del mètode sense fer res
+            return # si no existeix l'uuid, sortim netament sense llançar cap excepció
 
         ruta_original = self._images[uuid]["file"]
         ruta_fitxer = self._resolve_file_path(ruta_original)
@@ -112,6 +109,7 @@ class ImageData:
         if not os.path.isfile(ruta_fitxer): # si no existeix el fitxer, assignem dimensions 0x0 i sortim
             self._images[uuid]["dimensions"] = (0, 0)
             return
+
         # Pillow
         try:
             with Image.open(ruta_fitxer) as img: # intenta obrir el archiu amb Pillow
@@ -153,49 +151,49 @@ class ImageData:
             return None
         return str(self._images[uuid].get("file", "None"))
 
-    def get_prompt(self, uuid: str):  # Retorna el prompt utilitzat per generar la imatge
+    def get_prompt(self, uuid: str) -> str:  # Retorna el prompt utilitzat per generar la imatge
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("prompt", "None"))
 
-    def get_model(self, uuid: str):  # Retorna el model d'IA utilitzat 
+    def get_model(self, uuid: str) -> str:  # Retorna el model d'IA utilitzat 
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("model", "None"))
 
-    def get_seed(self, uuid: str):  # Retorna la llavor aleatòria utilitzada en la generació
+    def get_seed(self, uuid: str) -> str:  # Retorna la llavor aleatòria utilitzada en la generació
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("seed", "None"))
 
-    def get_cfg_scale(self, uuid: str):  # Retorna el guidance scale utilitzat
+    def get_cfg_scale(self, uuid: str) -> str:  # Retorna el guidance scale utilitzat
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("cfg_scale", "None"))
 
-    def get_steps(self, uuid: str):  # Retorna el nombre de passos d'iteració del model
+    def get_steps(self, uuid: str) -> str:  # Retorna el nombre de passos d'iteració del model
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("steps", "None"))
 
-    def get_sampler(self, uuid: str):  # Retorna l'algorisme de mostreig utilitzat
+    def get_sampler(self, uuid: str) -> str:  # Retorna l'algorisme de mostreig utilitzat
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("sampler", "None"))
 
-    def get_generated(self, uuid: str):  # Retorna "true" si la imatge està marcada com a generada
+    def get_generated(self, uuid: str) -> str:  # Retorna "true" si la imatge està marcada com a generada
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("generated", "None"))
 
-    def get_created_date(self, uuid: str):  # Retorna la data de creació en format YYYY-MM-DD
+    def get_created_date(self, uuid: str) -> str:  # Retorna la data de creació en format YYYY-MM-DD
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("created_date", "None"))
 
-    def get_dimensions(self, uuid: str):  # Retorna una tupla (width, height) amb les dimensions de la imatge
+    def get_dimensions(self, uuid: str) -> tuple:  # Retorna una tupla (width, height) amb les dimensions de la imatge
         if uuid not in self._images:
-            return None
+            return (0, 0)
         return self._images[uuid].get("dimensions", (0, 0))
 
     def __len__(self) -> int:
