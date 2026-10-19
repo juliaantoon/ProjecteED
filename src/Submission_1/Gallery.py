@@ -73,21 +73,20 @@ class Gallery:
         if self._image_id is None:
             return None
         norm_p = str(img_path).replace("\\", "/")
-        nom_base_root = os.path.basename(os.path.normpath(cfg.ROOT_DIR))
+        root_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR))
 
-        # Generem totes les variants possibles de la ruta per trobar l'UUID
-        candidats = [norm_p]
-        if norm_p.startswith(nom_base_root + "/"):
-            candidats.append(norm_p[len(nom_base_root) + 1:])
+        candidats = [
+            norm_p,
+            os.path.basename(norm_p),
+            norm_p.lstrip("/"),
+        ]
+        if norm_p.startswith(root_name + "/"):
+            candidats.append(norm_p[len(root_name) + 1:])
         else:
-            candidats.append(f"{nom_base_root}/{norm_p}")
-        
-        # Sense subcarpetes (només el nom del fitxer)
-        candidats.append(os.path.basename(norm_p))
+            candidats.append(f"{root_name}/{norm_p}")
 
-        # Si conté generated_images/
-        if "generated_images/" in norm_p:
-            candidats.append(norm_p.split("generated_images/")[-1])
+        if "/" in norm_p:
+            candidats.append(norm_p.split("/", 1)[1])
 
         for c in candidats:
             uid = self._image_id.get_uuid(c)
