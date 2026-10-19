@@ -63,7 +63,7 @@ class ImageFiles:
 
         self._added = sorted(list(new_files - self._files)) # llista dels arxius afegits
         self._removed = sorted(list(self._files - new_files)) # llista dels arxius eliminats
-        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius
+        self._files = new_files # actualitzem la llista d'arxius amb els nous arxiusmj
 
     def files_added(self) -> list:
         return list(self._added)

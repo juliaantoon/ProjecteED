@@ -146,7 +146,7 @@ class Gallery:
     def add_image_at_end(self, uuid: str) -> None:  # afegeix una imatge al final de la galeria
         self._images.append(uuid)
 
-    def remove_first_image(self) -> None:  # elimina la primera imatge de la galeria
+    def remove_first_image(self) -> None:  # elimina la primera imatge de la galeria.
         if len(self._images) > 0:
             self._images.popleft()
 

@@ -215,7 +215,7 @@ class ImageData:
             return "None"
         return str(self._images[uuid].get("generated", "None"))
 
-    def get_created_date(self, uuid: str) -> str:  # Retorna la data de creació en format YYYY-MM-DD
+    def get_created_date(self, uuid: str) -> str:  # Retorna la data de creació en format YYYY-MM-DD.
         if uuid not in self._images:
             return "None"
         return str(self._images[uuid].get("created_date", "None"))
