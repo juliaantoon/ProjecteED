@@ -72,21 +72,15 @@ class Gallery:
     def _find_uuid(self, img_path: str):
         if self._image_id is None:
             return None
-        norm_p = str(img_path).replace("\\", "/")
-        root_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR))
+        norm_p = img_path.replace("\\", "/")
+        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR))
 
-        candidats = [
-            norm_p,
-            os.path.basename(norm_p),
-            norm_p.lstrip("/"),
-        ]
-        if norm_p.startswith(root_name + "/"):
-            candidats.append(norm_p[len(root_name) + 1:])
+        candidats = [norm_p]
+        if norm_p.startswith(root_dir_name + "/"):
+            candidats.append(norm_p[len(root_dir_name) + 1:])
         else:
-            candidats.append(f"{root_name}/{norm_p}")
-
-        if "/" in norm_p:
-            candidats.append(norm_p.split("/", 1)[1])
+            candidats.append(f"{root_dir_name}/{norm_p}")
+        candidats.append(os.path.basename(norm_p))
 
         for c in candidats:
             uid = self._image_id.get_uuid(c)
@@ -110,23 +104,18 @@ class Gallery:
         try:
             with open(full_path, 'r', encoding='utf-8') as f:  # obre l'arxiu usant la ruta completa
                 data = json.load(f)  # carrega les dades del fitxer JSON a un diccionari
-            
-            if not isinstance(data, dict):
-                return
-
             self._gallery_name = str(data.get("gallery_name", ""))
             self._description = str(data.get("description", ""))
             self._created_date = str(data.get("created_date", ""))
 
             raw_images = data.get("images", [])  # obté la llista d'imatges del JSON
-            if isinstance(raw_images, list):
-                for img_path in raw_images:
-                    if self._image_id is not None:
-                        uuid = self._find_uuid(img_path)  # obté l'UUID de la imatge a partir del path
-                        if uuid:  # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
-                            self._images.append(uuid)
-                    else:
-                        self._images.append(img_path)
+            for img_path in raw_images:
+                if self._image_id is not None:
+                    uuid = self._find_uuid(img_path)  # obté l'UUID de la imatge a partir del path
+                    if uuid:  # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
+                        self._images.append(uuid)
+                else:
+                    self._images.append(img_path)
         except Exception:
             self._gallery_name = ""
             self._description = ""
@@ -146,7 +135,7 @@ class Gallery:
     def add_image_at_end(self, uuid: str) -> None:  # afegeix una imatge al final de la galeria
         self._images.append(uuid)
 
-    def remove_first_image(self) -> None:  # elimina la primera imatge de la galeria.
+    def remove_first_image(self) -> None:  # elimina la primera imatge de la galeria
         if len(self._images) > 0:
             self._images.popleft()
 

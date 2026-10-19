@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 ImageViewer.py : ** REQUIRED ** El vostre codi de la classe ImageViewer.
