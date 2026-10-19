@@ -5,53 +5,53 @@ SearchMetadata.py : ** REQUIRED ** El vostre codi de la classe SearchMetadata.
 Aquesta classe s'encarrega de cercar imatges segons criteris basats en metadades.
 
 Funcionalitat:
-    - Cercar imatges que continguin una subcadena en les seves metadades
-    - Combinar resultats de cerques amb operadors lògics (AND, OR)
+- Cercar imatges que continguin una subcadena en les seves metadades
+- Combinar resultats de cerques amb operadors lògics (AND, OR)
 
 Mètodes a implementar:
-    - prompt(sub: str) -> list
+- prompt(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp Prompt.
 
-    - model(sub: str) -> list
+- model(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp Model.
 
-    - seed(sub: str) -> list
+- seed(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp Seed.
 
-    - cfg_scale(sub: str) -> list
+- cfg_scale(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp CFG_Scale.
 
-    - steps(sub: str) -> list
+- steps(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp Steps.
 
-    - sampler(sub: str) -> list
+- sampler(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp Sampler.
 
-    - date(sub: str) -> list
+- date(sub: str) -> list
         Retorna una llista d'UUID de les imatges que contenen 'sub'
         en el camp Created_Date.
 
-    - and_operator(list1: list, list2: list) -> list
+- and_operator(list1: list, list2: list) -> list
         Retorna una llista amb els UUID que apareixen en AMBDUES llistes.
         (Intersecció de conjunts)
 
-    - or_operator(list1: list, list2: list) -> list
+- or_operator(list1: list, list2: list) -> list
         Retorna una llista amb els UUID que apareixen en QUALSEVOL de
         les dues llistes, sense duplicats.
         (Unió de conjunts)
 
 Notes:
-    - Les cerques són case-sensitive (distingeixen majúscules/minúscules)
-    - Utilitzeu str.find() per cercar subcadenes
-    - Les llistes retornades poden estar buides
-    - Els operadors lògics NO modifiquen les llistes originals
-    - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
+- Les cerques són case-sensitive (distingeixen majúscules/minúscules)
+- Utilitzeu str.find() per cercar subcadenes
+- Les llistes retornades poden estar buides
+- Els operadors lògics NO modifiquen les llistes originals
+- Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
 class SearchMetadata:
 
@@ -68,8 +68,9 @@ class SearchMetadata:
             return llista_uuids
         for uuid in getattr(self._image_data, "_images", {}):
             valor = getter(uuid)
-            if valor is not None and str(valor).find(sub_str) != -1:
-                llista_uuids.append(uuid)
+            if valor is not None and valor != "None":
+                if str(valor).find(sub_str) != -1:
+                    llista_uuids.append(uuid)
         return llista_uuids
 
     def prompt(self, sub: str) -> list: 

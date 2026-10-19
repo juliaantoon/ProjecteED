@@ -5,9 +5,9 @@ Gallery.py : ** REQUIRED ** El vostre codi de la classe Gallery.
 Aquesta classe s'encarrega de gestionar galeries d'imatges en format JSON.
 
 Funcionalitat:
-    - Llegir galeries des d'arxius JSON
-    - Visualitzar totes les imatges d'una galeria
-    - Afegir i eliminar imatges de la galeria
+- Llegir galeries des d'arxius JSON
+- Visualitzar totes les imatges d'una galeria
+- Afegir i eliminar imatges de la galeria
 
 Format JSON d'una galeria:
 {
@@ -22,31 +22,31 @@ Format JSON d'una galeria:
 }
 
 Mètodes a implementar:
-    - load_file(file: str) -> None
+- load_file(file: str) -> None
         Llegeix un arxiu JSON amb la definició de la galeria.
         Ha de validar que cada imatge referenciada existeix a la col·lecció.
         Si una imatge no existeix, l'ignora i continua processant.
         Emmagatzema internament els UUID de les imatges vàlides.
 
-    - show() -> None
+- show() -> None
         Visualitza totes les imatges de la galeria en ordre utilitzant
         ImageViewer.show_image().
 
-    - add_image_at_end(uuid: str) -> None
+- add_image_at_end(uuid: str) -> None
         Afegeix una imatge al final de la galeria.
 
-    - remove_first_image() -> None
+- remove_first_image() -> None
         Elimina la primera imatge de la galeria.
 
-    - remove_last_image() -> None
+- remove_last_image() -> None
         Elimina l'última imatge de la galeria.
 
 Notes:
-    - Utilitzeu la llibreria json per llegir els arxius
-    - Els paths dins el JSON són relatius a ROOT_DIR
-    - Cada galeria és un objecte independent (instància de Gallery)
-    - Podeu tenir múltiples galeries actives simultàniament
-    - Les operacions d'afegir/eliminar són ràpides (no busquen a la llista)
+- Utilitzeu la llibreria json per llegir els arxius
+- Els paths dins el JSON són relatius a ROOT_DIR
+- Cada galeria és un objecte independent (instància de Gallery)
+- Podeu tenir múltiples galeries actives simultàniament
+- Les operacions d'afegir/eliminar són ràpides (no busquen a la llista)
 """
 import os
 import json
@@ -69,23 +69,23 @@ class Gallery:
     def set_image_id(self, image_id) -> None:  # assigna o actualitza el gestor ImageID
         self._image_id = image_id
 
-    def _find_uuid(self, img_path):
+    def _find_uuid(self, img_path: str):
         if self._image_id is None:
             return None
-        p = img_path.replace("\\", "/")
-        root_base = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) + "/"
-        candidats = [p]
-        if p.startswith(root_base):
-            candidats.append(p[len(root_base):])
+        norm_p = img_path.replace("\\", "/")
+        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR))
+
+        candidats = [norm_p]
+        if norm_p.startswith(root_dir_name + "/"):
+            candidats.append(norm_p[len(root_dir_name) + 1:])
         else:
-            candidats.append(root_base + p)
-        # També prova sense cap carpeta previa
-        candidats.append(os.path.basename(p))
+            candidats.append(f"{root_dir_name}/{norm_p}")
+        candidats.append(os.path.basename(norm_p))
 
         for c in candidats:
-            uuid = self._image_id.get_uuid(c)
-            if uuid and uuid != "None":
-                return uuid
+            uid = self._image_id.get_uuid(c)
+            if uid is not None and uid != "None":
+                return uid
         return None
 
     def load_file(self, file: str) -> None:
@@ -107,7 +107,6 @@ class Gallery:
             self._gallery_name = str(data.get("gallery_name", ""))
             self._description = str(data.get("description", ""))
             self._created_date = str(data.get("created_date", ""))
-            self._images = deque()  # reinicia la llista d'imatges
 
             raw_images = data.get("images", [])  # obté la llista d'imatges del JSON
             for img_path in raw_images:
@@ -117,8 +116,11 @@ class Gallery:
                         self._images.append(uuid)
                 else:
                     self._images.append(img_path)
-        except Exception as e:
-            print(f"Error carregant la galeria '{file}': {e}")
+        except Exception:
+            self._gallery_name = ""
+            self._description = ""
+            self._created_date = ""
+            self._images = deque()
 
     def show(self) -> None:  # mostra totes les imatges
         if self._viewer is None:
@@ -127,7 +129,7 @@ class Gallery:
         print(f"Galeria: {self._gallery_name}")
         print(f"Descripció: {self._description}")
         print(f"Total d'imatges: {len(self._images)}")
-        for uuid in self._images:
+        for uuid in list(self._images):
             self._viewer.show_image(uuid)  # mostra cada imatge utilitzant el visualitzador
 
     def add_image_at_end(self, uuid: str) -> None:  # afegeix una imatge al final de la galeria
