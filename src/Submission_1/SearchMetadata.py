@@ -58,14 +58,17 @@ class SearchMetadata:
     def __init__(self, image_data=None):
         self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
 
-    def _cercar(self, nom_getter: str, sub: str) -> list:  #  rep el nom del getter
+    def _cercar(self, nom_getter: str, sub) -> list:  # rep el nom del getter
         llista_uuids = []
-        if self._image_data is None:
+        if self._image_data is None or sub is None:
             return llista_uuids
-        getter = getattr(self._image_data, nom_getter)
-        for uuid in self._image_data._images:
+        sub_str = str(sub)
+        getter = getattr(self._image_data, nom_getter, None)
+        if getter is None:
+            return llista_uuids
+        for uuid in getattr(self._image_data, "_images", {}):
             valor = getter(uuid)
-            if valor is not None and str(valor).find(sub) != -1:
+            if valor is not None and str(valor).find(sub_str) != -1:
                 llista_uuids.append(uuid)
         return llista_uuids
 
@@ -93,21 +96,23 @@ class SearchMetadata:
     def generated(self, sub: str) -> list:
         return self._cercar("get_generated", sub) 
 
-    def dimensions(self, width: int, height: int) -> list:
+    def dimensions(self, width, height) -> list:
         llista_uuids = []
-        if self._image_data is None:
+        if self._image_data is None or width is None or height is None:
             return llista_uuids
         try:                                          
-            width, height = int(width), int(height)
+            w_val, h_val = int(width), int(height)
         except (TypeError, ValueError):
             return llista_uuids
-        for uuid in self._image_data._images:
+        for uuid in getattr(self._image_data, "_images", {}):
             dims = self._image_data.get_dimensions(uuid)
-            if dims is not None and tuple(dims) == (width, height):
+            if dims is not None and tuple(dims) == (w_val, h_val):
                 llista_uuids.append(uuid)
         return llista_uuids
 
     def and_operator(self, list1: list, list2: list) -> list: # intersecció de conjunts
+        if list1 is None or list2 is None:
+            return []
         en_list2 = set(list2)
         vistos = set()
         resultat = []
@@ -118,9 +123,13 @@ class SearchMetadata:
         return resultat
 
     def or_operator(self, list1: list, list2: list) -> list: # unió de conjunts
+        if list1 is None and list2 is None:
+            return []
+        l1 = list1 if list1 is not None else []
+        l2 = list2 if list2 is not None else []
         vistos = set()
         resultat = []
-        for u in list1 + list2:
+        for u in l1 + l2:
             if u not in vistos:
                 vistos.add(u)
                 resultat.append(u)

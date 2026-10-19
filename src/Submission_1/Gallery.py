@@ -70,13 +70,18 @@ class Gallery:
         self._image_id = image_id
 
     def _find_uuid(self, img_path):
+        if self._image_id is None:
+            return None
         p = img_path.replace("\\", "/")
-        prefix = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) + "/"
+        root_base = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) + "/"
         candidats = [p]
-        if p.startswith(prefix):
-            candidats.append(p[len(prefix):])  # sense el prefix
+        if p.startswith(root_base):
+            candidats.append(p[len(root_base):])
         else:
-            candidats.append(prefix + p)       # amb el prefix
+            candidats.append(root_base + p)
+        # També prova sense cap carpeta previa
+        candidats.append(os.path.basename(p))
+
         for c in candidats:
             uuid = self._image_id.get_uuid(c)
             if uuid and uuid != "None":
@@ -84,23 +89,24 @@ class Gallery:
         return None
 
     def load_file(self, file: str) -> None:
-
         self._gallery_name = ""             
         self._description = ""              
         self._created_date = ""             
         self._images = deque() 
 
-        if not os.path.isfile(file):  # comprova si el fitxer és relatiu a ROOT_DIR
-            full_path = os.path.join(cfg.ROOT_DIR, file)  # construeix la ruta sencera
-        else:
-            full_path = file  # usa la ruta directa
+        full_path = file
+        if not os.path.isfile(full_path):
+            full_path = os.path.join(cfg.ROOT_DIR, file)
+
+        if not os.path.isfile(full_path):
+            return
 
         try:
             with open(full_path, 'r', encoding='utf-8') as f:  # obre l'arxiu usant la ruta completa
                 data = json.load(f)  # carrega les dades del fitxer JSON a un diccionari
-            self._gallery_name = data.get("gallery_name", "")
-            self._description = data.get("description", "")
-            self._created_date = data.get("created_date", "")
+            self._gallery_name = str(data.get("gallery_name", ""))
+            self._description = str(data.get("description", ""))
+            self._created_date = str(data.get("created_date", ""))
             self._images = deque()  # reinicia la llista d'imatges
 
             raw_images = data.get("images", [])  # obté la llista d'imatges del JSON
@@ -120,7 +126,7 @@ class Gallery:
             return
         print(f"Galeria: {self._gallery_name}")
         print(f"Descripció: {self._description}")
-        print(f"Total d'imatges: {len(self._images)}") ########
+        print(f"Total d'imatges: {len(self._images)}")
         for uuid in self._images:
             self._viewer.show_image(uuid)  # mostra cada imatge utilitzant el visualitzador
 
