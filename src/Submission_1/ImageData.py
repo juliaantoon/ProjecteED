@@ -65,136 +65,118 @@ import cfg
 class ImageData:
 
     def __init__(self, image_id=None):
-        self._images = {}  # dic principal on cada clau és un UUID i el valor és un diccionari amb les metadades de la imatge
+        self._images = {}  # dic principal on cada clau és un UUID i el valor és un diccionari amb les dades
         self._image_id = image_id # guarda una referencia 
 
     def add_image(self, uuid: str, file: str) -> None: # registra una imatge pero sense llegir el disc encara
         self._images[uuid] = {
-            "file": file,
-            "prompt": "None",
-            "model": "None",
-            "seed": "None",
-            "cfg_scale": "None",
-            "steps": "None",
-            "sampler": "None",
-            "generated": "None",
-            "created_date": "None",
-            "dimensions": (0, 0)
+            "file": file, # ruta guardada del fitxer
+            "metadata": {} # diccionari buit per a les futures metadades
         }
 
     def remove_image(self, uuid: str) -> None:
         if uuid in self._images: # comprovem si l'uuid existeix abans d'eliminar-lo
             del self._images[uuid] 
 
-    def _resolve_file_path(self, file_path: str) -> str:
-        if not file_path or file_path == "None": # verifiva si la ruta existeix
-            return ""
-        if os.path.isfile(file_path):
-            return file_path
-        joined = os.path.join(cfg.ROOT_DIR, file_path) # si no existeix probem a unirlo amb el directori arrel de l'aplicació
-        if os.path.isfile(joined):
-            return joined
-        normed = os.path.normpath(joined)
-        if os.path.isfile(normed):
-            return normed
-        return file_path # retorna la ruta amb la que es pot obrir l'arxiu
-
     def load_metadata(self, uuid: str) -> None:
-        if uuid not in self._images:
-            return # si no existeix l'uuid, sortim netament sense llançar cap excepció
+        uuid = str(uuid) # convertim l'UUID a string per poder consultar-lo
 
-        ruta_original = self._images[uuid]["file"]
-        ruta_fitxer = self._resolve_file_path(ruta_original)
+        if uuid not in self._images: # comprovem si la imatge està registrada
+            if uuid: # si l'UUID no és buit, indiquem que no existeix
+                raise FileNotFoundError(f"UUID '{uuid}' desconegut.")
+            return # si és buit, acabem sense carregar res
 
-        if not os.path.isfile(ruta_fitxer): # si no existeix el fitxer, assignem dimensions 0x0 i sortim
-            self._images[uuid]["dimensions"] = (0, 0)
-            return
+        file_path = self._images[uuid]["file"] # obtenim el path de la imatge guardat
 
-        # Pillow
+        if os.path.isabs(file_path): # comprovem si el path ja és una ruta absoluta
+            full_path = file_path # si és absoluta, la podem utilitzar directament
+        else:
+            root_dir = getattr(cfg, "ROOT_DIR", "") # obtenim el directori arrel
+            full_path = os.path.join(root_dir, file_path) # si és relativa, la unim amb la carpeta ROOT_DIR
+
+            if not os.path.isfile(full_path): # si no trobem el fitxer, provem alternativa
+                alt_name = file_path.removeprefix("../") if hasattr(file_path, "removeprefix") else file_path.replace("../", "") # traiem el prefix ../
+                alternative = os.path.join(root_dir, alt_name) # unim amb ROOT_DIR
+                if os.path.isfile(alternative): # si el fitxer existeix amb la ruta alternativa
+                    full_path = alternative # utilitzem aquesta ruta per carregar-lo
+
         try:
-            with Image.open(ruta_fitxer) as img: # intenta obrir el archiu amb Pillow
-                self._images[uuid]["dimensions"] = (img.width, img.height) # extreu les dimensions reals i les guarda com a tupla
-                raw_text = getattr(img, "text", {}) or {} # si no hi ha metadades, retorna un diccionari buit
-        except Exception:
-            self._images[uuid]["dimensions"] = (0, 0) # si no es pot obrir el fitxer, assignem dimensions 0x0 i sortim
-            raw_text = {}
+            with Image.open(full_path) as img: # intentem obrir la imatge amb Pillow
+                raw_text = cfg.read_png_metadata(full_path) # llegim les metadades guardades al PNG amb la funció de cfg
+                if raw_text is None: # si no trobem metadades, utilitzem diccionari buit
+                    raw_text = {}
 
-        # Llegeix les metadades embegudes dins l'arxiu PNG i les emmagatzema
-        metadades = {}
-        try:
-            metadades = cfg.read_png_metadata(ruta_fitxer) or {}
-        except Exception:
-            try:
-                metadades = cfg.read_png_metadata(ruta_original) or {}
-            except Exception:
-                metadades = raw_text
+                text_meta = {k.lower(): str(v) for k, v in raw_text.items()} # convertim claus a minúscules i valors a string
+                created_date = text_meta.get("created_date", "None") # obtenim la data de creació o None
 
-        metadades_lower = {str(k).lower(): v for k, v in metadades.items()} # converteix totes les claus a minúscules per evitar problemes de majúscules/minúscules
+                self._images[uuid]["metadata"] = { # guardem totes les metadades al subdiccionari metadata
+                    "prompt": text_meta.get("prompt", "None"), # guardem el prompt
+                    "model": text_meta.get("model", "None"), # guardem el model
+                    "seed": text_meta.get("seed", "None"), # guardem la seed
+                    "cfg_scale": text_meta.get("cfg_scale", text_meta.get("cfg", "None")), # comprovem cfg_scale o cfg
+                    "steps": text_meta.get("steps", "None"), # guardem steps
+                    "sampler": text_meta.get("sampler", "None"), # guardem sampler
+                    "generated": text_meta.get("generated", "None"), # guardem generated
+                    "created_date": created_date, # guardem created_date
+                    "dimensions": (img.width, img.height) # guardem dimensions com a tupla (width, height)
+                }
 
-        def _get_field(field_name): 
-            val = metadades_lower.get(field_name)
-            if val is None or str(val).strip() == "" or str(val) == "None":
-                return "None"
-            return str(val)
+        except FileNotFoundError:
+            raise # tornem a llançar l'error si el fitxer no existeix
 
-        self._images[uuid]["prompt"] = _get_field("prompt")
-        self._images[uuid]["model"] = _get_field("model")
-        self._images[uuid]["seed"] = _get_field("seed")
-        self._images[uuid]["cfg_scale"] = _get_field("cfg_scale")
-        self._images[uuid]["steps"] = _get_field("steps")
-        self._images[uuid]["sampler"] = _get_field("sampler")
-        self._images[uuid]["generated"] = _get_field("generated")
-        self._images[uuid]["created_date"] = _get_field("created_date")
+        except Exception as e:
+            print(f"Error carregant metadades de {file_path}: {type(e).__name__}: {e}") # mostrem quin tipus d'error ha passat
+            self._images[uuid]["metadata"] = {} # deixem les metadades buides si no s'han pogut carregar
 
-    def get_filename(self, uuid: str): # retorna la ruta original de l'archiu guardat
+    def get_filename(self, uuid: str): # retorna la ruta original de l'arxiu guardat
         if uuid not in self._images:
             return None
         return str(self._images[uuid].get("file", "None"))
 
     def get_prompt(self, uuid: str) -> str:  # Retorna el prompt utilitzat per generar la imatge
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("prompt", "None"))
+        return str(self._images[uuid]["metadata"].get("prompt", "None"))
 
     def get_model(self, uuid: str) -> str:  # Retorna el model d'IA utilitzat 
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("model", "None"))
+        return str(self._images[uuid]["metadata"].get("model", "None"))
 
     def get_seed(self, uuid: str) -> str:  # Retorna la llavor aleatòria utilitzada en la generació
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("seed", "None"))
+        return str(self._images[uuid]["metadata"].get("seed", "None"))
 
     def get_cfg_scale(self, uuid: str) -> str:  # Retorna el guidance scale utilitzat
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("cfg_scale", "None"))
+        return str(self._images[uuid]["metadata"].get("cfg_scale", "None"))
 
     def get_steps(self, uuid: str) -> str:  # Retorna el nombre de passos d'iteració del model
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("steps", "None"))
+        return str(self._images[uuid]["metadata"].get("steps", "None"))
 
     def get_sampler(self, uuid: str) -> str:  # Retorna l'algorisme de mostreig utilitzat
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("sampler", "None"))
+        return str(self._images[uuid]["metadata"].get("sampler", "None"))
 
     def get_generated(self, uuid: str) -> str:  # Retorna "true" si la imatge està marcada com a generada
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("generated", "None"))
+        return str(self._images[uuid]["metadata"].get("generated", "None"))
 
     def get_created_date(self, uuid: str) -> str:  # Retorna la data de creació en format YYYY-MM-DD
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return "None"
-        return str(self._images[uuid].get("created_date", "None"))
+        return str(self._images[uuid]["metadata"].get("created_date", "None"))
 
     def get_dimensions(self, uuid: str) -> tuple:  # Retorna una tupla (width, height) amb les dimensions de la imatge
-        if uuid not in self._images:
+        if uuid not in self._images or "metadata" not in self._images[uuid]:
             return (0, 0)
-        return self._images[uuid].get("dimensions", (0, 0))
+        return self._images[uuid]["metadata"].get("dimensions", (0, 0))
 
     def __len__(self) -> int:
         return len(self._images)
