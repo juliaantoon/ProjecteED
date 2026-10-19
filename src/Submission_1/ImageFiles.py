@@ -52,9 +52,9 @@ class ImageFiles:
                 for file in files:
                     if file.lower().endswith(".png"): # comprova si es .png
                         full_path = os.path.join(r, file) # obtenim el path complet de l'arxiu
-                        rel_path = os.path.relpath(full_path, base_dir) # obtenim el path relatiu a partir del directori analitzat (pq no importi el pc on s'executa)
+                        rel_path = os.path.abspath(full_path) # obtenim el path absolut de l'arxiu
                         rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
-                        new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
+                        new_files.add(rel_path) # afegim la ruta a la llista de nous arxius
         
         self._added = sorted(list(new_files - self._files)) # llista dels arcxius afegits
         self._removed = sorted(list(self._files - new_files)) # llista dels arxius eliminats
