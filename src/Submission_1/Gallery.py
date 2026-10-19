@@ -55,7 +55,6 @@ from collections import deque
 
 
 class Gallery:
-
     def __init__(self, image_id=None, image_viewer=None):
         self._gallery_name = ""  # nom de la galeria
         self._description = ""  # descripcio del contingut de la galeria
@@ -64,103 +63,88 @@ class Gallery:
         self._viewer = image_viewer  # instància de la classe ImageViewer per mostrar les imatges
         self._image_id = image_id  # instància de la classe ImageID per obtenir els UUID de les imatges
 
-    def set_viewer(self, image_viewer) -> None:
-        self._viewer = image_viewer  # assigna o actualitza el visualitzador d'imatges
+    def set_viewer(self, image_viewer) -> None:  # assigna o actualitza el visualitzador d'imatges
+        self._viewer = image_viewer
 
-    def set_image_id(self, image_id) -> None:
-        self._image_id = image_id  # assigna o actualitza el gestor ImageID
+    def set_image_id(self, image_id) -> None:  # assigna o actualitza el gestor ImageID
+        self._image_id = image_id
 
-    def _find_uuid(self, img_path: str):
-        if self._image_id is None or not isinstance(img_path, str):
+    def _find_uuid(self, img_path: str): 
+        if self._image_id is None:
             return None
+        norm_p = img_path.replace("\\", "/") # normalitza el path per compatibilitat amb JSON i diferents sistemes operatius
+        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) # obtenim el nom del directori arrel de la col·lecció d'imatges
 
-        norm_p = img_path.replace("\\", "/")  # normalitza el path per compatibilitat entre sistemes operatius
-        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR))  # obtenim el nom del directori arrel
-
-        candidats = [norm_p]  # possibles formats del path per buscar l'UUID
-
-        if norm_p.startswith(root_dir_name + "/"):
+        candidats = [norm_p] # llista de possibles paths per buscar l'UUID segons diferents formats (relatiu, absolut, només nom de fitxer)
+        if norm_p.startswith(root_dir_name + "/"): 
             candidats.append(norm_p[len(root_dir_name) + 1:])
         else:
             candidats.append(f"{root_dir_name}/{norm_p}")
-
-        candidats.append(os.path.basename(norm_p))  # també provem amb el nom del fitxer
+        candidats.append(os.path.basename(norm_p))
 
         for c in candidats:
             uid = self._image_id.get_uuid(c)
-
             if uid is not None and uid != "None":
                 return uid
-
         return None
 
-    def load_file(self, file: str) -> None:
-        self._gallery_name = ""  # reiniciem el nom de la galeria
-        self._description = ""  # reiniciem la descripció
-        self._created_date = ""  # reiniciem la data
-        self._images = deque()  # reiniciem la llista d'imatges
+    def load_file(self, file: str) -> None: 
+        self._gallery_name = ""             
+        self._description = ""              
+        self._created_date = ""             
+        self._images = deque() 
 
         full_path = file
+        if not os.path.isfile(full_path):
+            full_path = os.path.join(cfg.ROOT_DIR, file)
 
         if not os.path.isfile(full_path):
-            full_path = os.path.join(cfg.ROOT_DIR, file)  # provem la ruta relativa a ROOT_DIR
-
-        if not os.path.isfile(full_path):
-            return  # si no existeix el JSON, deixem la galeria buida
+            return
 
         try:
-            with open(full_path, 'r', encoding='utf-8') as f:  # obrim l'arxiu JSON
-                data = json.load(f)  # carreguem les dades del fitxer
-
-            if not isinstance(data, dict):  # comprovem que les dades siguin un diccionari
-                return
-
+            with open(full_path, 'r', encoding='utf-8') as f:  # obre l'arxiu usant la ruta completa
+                data = json.load(f)  # carrega les dades del fitxer JSON a un diccionari
             self._gallery_name = str(data.get("gallery_name", ""))
             self._description = str(data.get("description", ""))
             self._created_date = str(data.get("created_date", ""))
 
-            raw_images = data.get("images", [])  # obtenim la llista d'imatges del JSON
-
-            if not isinstance(raw_images, list):  # comprovem que sigui una llista
-                return
-
+            raw_images = data.get("images", [])  # obté la llista d'imatges del JSON
             for img_path in raw_images:
-                uuid = self._find_uuid(img_path)  # obtenim l'UUID a partir del path
-
-                if uuid is not None:  # només afegim imatges que existeixen a ImageID
-                    self._images.append(uuid)
-
+                if self._image_id is not None:
+                    uuid = self._find_uuid(img_path)  # obté l'UUID de la imatge a partir del path
+                    if uuid:  # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
+                        self._images.append(uuid)
+                else:
+                    self._images.append(img_path)
         except Exception:
             self._gallery_name = ""
             self._description = ""
             self._created_date = ""
-            self._images = deque()  # si hi ha un error, deixem la galeria buida
+            self._images = deque()
 
-    def show(self) -> None:
-        if self._viewer is None:  # comprovem que hi hagi un visualitzador
+    def show(self) -> None:  # mostra totes les imatges
+        if self._viewer is None:
             print("Error: No s'ha configurat cap ImageViewer. No es poden mostrar les imatges.")
             return
-
         print(f"Galeria: {self._gallery_name}")
         print(f"Descripció: {self._description}")
         print(f"Total d'imatges: {len(self._images)}")
-
         for uuid in list(self._images):
             self._viewer.show_image(uuid)  # mostra cada imatge utilitzant el visualitzador
 
-    def add_image_at_end(self, uuid: str) -> None:
-        self._images.append(uuid)  # afegeix la imatge al final de la galeria
+    def add_image_at_end(self, uuid: str) -> None:  # afegeix una imatge al final de la galeria
+        self._images.append(uuid)
 
-    def remove_first_image(self) -> None:
-        if len(self._images) > 0:  # comprovem que la galeria no estigui buida
-            self._images.popleft()  # eliminem la primera imatge
+    def remove_first_image(self) -> None:  # elimina la primera imatge de la galeria
+        if len(self._images) > 0:
+            self._images.popleft()
 
-    def remove_last_image(self) -> None:
-        if len(self._images) > 0:  # comprovem que la galeria no estigui buida
-            self._images.pop()  # eliminem l'última imatge
+    def remove_last_image(self) -> None:  # elimina l'última imatge de la galeria
+        if len(self._images) > 0:
+            self._images.pop()
 
-    def __len__(self) -> int:
+    def __len__(self) -> int:  # retorna el nombre d'imatges de la galeria
         return len(self._images)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # representació en text de la galeria
         return f"Gallery('{self._gallery_name}', imatges={len(self._images)})"
