@@ -102,7 +102,9 @@ class ImageData:
 
     def load_metadata(self, uuid: str) -> None:
         if uuid not in self._images:
-            return
+            if uuid: # si no es buida la variable uuid, llancem una excepció per indicar que no s'ha trobat
+                raise FileNotFoundError(f"UUID '{uuid}' no trobat a la col·lecció d'imatges.")
+            return # si es buida la variable uuid, simplement sortim del mètode sense fer res
 
         ruta_original = self._images[uuid]["file"]
         ruta_fitxer = self._resolve_file_path(ruta_original)
