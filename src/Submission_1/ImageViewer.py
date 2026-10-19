@@ -50,13 +50,13 @@ from PIL import Image
 
 class ImageViewer:
     def __init__(self, image_data=None):
-        self._image_data = image_data
+        self._image_data = image_data # guarda la instania de imagedata que conte la info tecnica de les imatges
 
     def set_image_data(self, image_data: object) -> None:   # ens permet actualitzar l'objecte ImageData si cal
         self._image_data = image_data
 
-    def print_image(self, uuid: str) -> None:
-        if self._image_data is None:
+    def print_image(self, uuid: str) -> None: # Imprimeix per pantalla totes les metadades de la imatge identificada per l'UUID
+        if self._image_data is None: # mira si esta configurat sino surt error
             print("Error: No s'ha configurat cap instància d'ImageData a ImageViewer.")
             return
         
@@ -91,7 +91,7 @@ class ImageViewer:
             print(f"{key}: {value}")
 
     def show_file(self, file: str) -> None: # Mostra la imatge especificada utilitzant PIL 
-        if not file or file == "None":
+        if not file or file == "None": # si no hi ha ruta de fitxer, surt de la funció
             return
         if not os.path.isfile(file):
             file = os.path.join(cfg.ROOT_DIR, file)
@@ -111,15 +111,15 @@ class ImageViewer:
 
         file_path = self._image_data.get_filename(uuid)
 
-        if mode == 0:
+        if mode == 0: # només metadades
             self.print_image(uuid)
 
-        elif mode == 1:
+        elif mode == 1: # metadades + imatge
             self.print_image(uuid)
             if file_path and file_path != "None":  # comprovem que el fitxer sigui valid
                 self.show_file(file_path)
 
-        elif mode == 2:
+        elif mode == 2: # ºnomés imatge
             if file_path and file_path != "None":  # comprovem que el fitxer sigui valid
                 self.show_file(file_path)
         else:

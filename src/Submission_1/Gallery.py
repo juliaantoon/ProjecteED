@@ -69,14 +69,14 @@ class Gallery:
     def set_image_id(self, image_id) -> None:  # assigna o actualitza el gestor ImageID
         self._image_id = image_id
 
-    def _find_uuid(self, img_path: str):
+    def _find_uuid(self, img_path: str): 
         if self._image_id is None:
             return None
-        norm_p = img_path.replace("\\", "/")
-        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR))
+        norm_p = img_path.replace("\\", "/") # normalitza el path per compatibilitat amb JSON i diferents sistemes operatius
+        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) # obtenim el nom del directori arrel de la col·lecció d'imatges
 
-        candidats = [norm_p]
-        if norm_p.startswith(root_dir_name + "/"):
+        candidats = [norm_p] # llista de possibles paths per buscar l'UUID segons diferents formats (relatiu, absolut, només nom de fitxer)
+        if norm_p.startswith(root_dir_name + "/"): 
             candidats.append(norm_p[len(root_dir_name) + 1:])
         else:
             candidats.append(f"{root_dir_name}/{norm_p}")
@@ -88,7 +88,7 @@ class Gallery:
                 return uid
         return None
 
-    def load_file(self, file: str) -> None:
+    def load_file(self, file: str) -> None: 
         self._gallery_name = ""             
         self._description = ""              
         self._created_date = ""             

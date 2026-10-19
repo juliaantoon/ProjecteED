@@ -66,10 +66,10 @@ import cfg
 class ImageData:
 
     def __init__(self, image_id=None):
-        self._images = {}  # Diccionari principal: clau UUID -> diccionari de dades
-        self._image_id = image_id
+        self._images = {}  # dic principal on cada clau és un UUID i el valor és un diccionari amb les metadades de la imatge
+        self._image_id = image_id # guarda una referencia 
 
-    def add_image(self, uuid: str, file: str) -> None:
+    def add_image(self, uuid: str, file: str) -> None: # registra una imatge pero sense llegir el disc encara
         self._images[uuid] = {
             "file": file,
             "prompt": "None",
@@ -85,20 +85,20 @@ class ImageData:
 
     def remove_image(self, uuid: str) -> None:
         if uuid in self._images: # comprovem si l'uuid existeix abans d'eliminar-lo
-            del self._images[uuid]
+            del self._images[uuid] 
 
     def _resolve_file_path(self, file_path: str) -> str:
-        if not file_path or file_path == "None":
+        if not file_path or file_path == "None": # verifiva si la ruta existeix
             return ""
         if os.path.isfile(file_path):
             return file_path
-        joined = os.path.join(cfg.ROOT_DIR, file_path)
+        joined = os.path.join(cfg.ROOT_DIR, file_path) # si no existeix probem a unirlo amb el directori arrel de l'aplicació
         if os.path.isfile(joined):
             return joined
         normed = os.path.normpath(joined)
         if os.path.isfile(normed):
             return normed
-        return file_path
+        return file_path # retorna la ruta amb la que es pot obrir l'arxiu
 
     def load_metadata(self, uuid: str) -> None:
         if uuid not in self._images:
@@ -107,20 +107,19 @@ class ImageData:
         ruta_original = self._images[uuid]["file"]
         ruta_fitxer = self._resolve_file_path(ruta_original)
 
-        if not os.path.isfile(ruta_fitxer):
+        if not os.path.isfile(ruta_fitxer): # si no existeix el fitxer, assignem dimensions 0x0 i sortim
             self._images[uuid]["dimensions"] = (0, 0)
             return
-
-        # Llegim dimensions amb PIL
+        # Pillow
         try:
-            with Image.open(ruta_fitxer) as img:
-                self._images[uuid]["dimensions"] = (img.width, img.height)
-                raw_text = getattr(img, "text", {}) or {}
+            with Image.open(ruta_fitxer) as img: # intenta obrir el archiu amb Pillow
+                self._images[uuid]["dimensions"] = (img.width, img.height) # extreu les dimensions reals i les guarda com a tupla
+                raw_text = getattr(img, "text", {}) or {} # si no hi ha metadades, retorna un diccionari buit
         except Exception:
-            self._images[uuid]["dimensions"] = (0, 0)
+            self._images[uuid]["dimensions"] = (0, 0) # si no es pot obrir el fitxer, assignem dimensions 0x0 i sortim
             raw_text = {}
 
-        # Llegim metadades oficials amb cfg
+        # Llegeix les metadades embegudes dins l'arxiu PNG i les emmagatzema
         metadades = {}
         try:
             metadades = cfg.read_png_metadata(ruta_fitxer) or {}
@@ -130,9 +129,9 @@ class ImageData:
             except Exception:
                 metadades = raw_text
 
-        metadades_lower = {str(k).lower(): v for k, v in metadades.items()}
+        metadades_lower = {str(k).lower(): v for k, v in metadades.items()} # converteix totes les claus a minúscules per evitar problemes de majúscules/minúscules
 
-        def _get_field(field_name):
+        def _get_field(field_name): 
             val = metadades_lower.get(field_name)
             if val is None or str(val).strip() == "" or str(val) == "None":
                 return "None"
@@ -147,7 +146,7 @@ class ImageData:
         self._images[uuid]["generated"] = _get_field("generated")
         self._images[uuid]["created_date"] = _get_field("created_date")
 
-    def get_filename(self, uuid: str):
+    def get_filename(self, uuid: str): # retorna la ruta original de l'archiu guardat
         if uuid not in self._images:
             return None
         return str(self._images[uuid].get("file", "None"))

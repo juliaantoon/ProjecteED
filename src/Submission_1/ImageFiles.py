@@ -33,13 +33,13 @@ import cfg
 class ImageFiles:
 
     def __init__(self):
-        self._files = set()
-        self._added = []
-        self._removed = []
-        self._path = None
+        self._files = set() # conjunt per emmagatzemar els paths relatius dels arxius PNG trobats
+        self._added = [] # llista buida per emmagtzemar rutes dels fitxers que sacaben d'afegir
+        self._removed = [] # llista buida per emmagatzemar rutes dels fitxers que s'han eliminat
+        self._path = None 
 
     def reload_fs(self, path: str = None) -> None:
-        if path is not None:
+        if path is not None: # comprova si han psat el doc com a parametre path sino fa servir el per defecte ROOT_DIR
             self._path = path
         elif self._path is None:
             self._path = cfg.ROOT_DIR
@@ -48,11 +48,11 @@ class ImageFiles:
         new_files = set()
 
         if os.path.exists(base_dir):
-            for r, dirs, files in os.walk(base_dir): # recorre recursivament tots els subdirectoris a partir del path especificat
+            for r, dirs, files in os.walk(base_dir): # si la carpeta existeix entre a tot 
                 for file in files:
-                    if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
+                    if file.lower().endswith(".png"): # comprova si es .png
                         full_path = os.path.join(r, file) # obtenim el path complet de l'arxiu
-                        rel_path = os.path.relpath(full_path, base_dir) # obtenim el path relatiu a partir del directori analitzat
+                        rel_path = os.path.relpath(full_path, base_dir) # obtenim el path relatiu a partir del directori analitzat (pq no importi el pc on s'executa)
                         rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
                         new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
         
@@ -61,13 +61,13 @@ class ImageFiles:
         self._files = new_files # actualitzem la llista d'arxius amb els nous arxius 
 
     def files_added(self) -> list:
-        return list(self._added)
+        return list(self._added) # retorna la llista dels arxius afegits des de l'ultima crida 
 
     def files_removed(self) -> list:
-        return list(self._removed)
+        return list(self._removed) # retorna la llista dels arxius eliminats des de l'ultima crida
 
     def __len__(self) -> int:
-        return len(self._files)
+        return len(self._files) # retorna el nombre total d'arxius PNG trobats a la carpeta i subcarpetes
 
     def __str__(self) -> str:
         return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"
