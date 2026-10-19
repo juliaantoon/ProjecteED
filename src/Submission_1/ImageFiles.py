@@ -34,14 +34,12 @@ import cfg
 class ImageFiles:
  
     def __init__(self):
-        self._files = set()   # paths relatius a ROOT_DIR dels PNG actuals
+        self._files = set()   # paths canònics dels PNG actuals
         self._added = []      # afegits des de l'última crida a reload_fs()
         self._removed = []    # eliminats des de l'última crida a reload_fs()
  
     def reload_fs(self, path: str = None) -> None:
-        # Directori a recórrer: el indicat o, per defecte, el ROOT_DIR actual
         base_dir = path if path is not None else cfg.ROOT_DIR
-        root_dir = cfg.ROOT_DIR
  
         new_files = set()
         if os.path.exists(base_dir):
@@ -49,16 +47,20 @@ class ImageFiles:
                 for file in files:
                     if file.lower().endswith(".png"):
                         full_path = os.path.join(r, file)
-                        # IMPORTANT: relatiu a ROOT_DIR (no al directori recorregut)
-                        try:
-                            rel_path = os.path.relpath(full_path, root_dir)
-                        except ValueError:
-                            rel_path = full_path
-                        new_files.add(rel_path.replace("\\", "/"))
+                        # Format canònic oficial: relatiu a ROOT_DIR, amb "/"
+                        new_files.add(cfg.get_canonical_pathfile(full_path))
  
         self._added = sorted(new_files - self._files)
         self._removed = sorted(self._files - new_files)
         self._files = new_files
+ 
+        # --- DEBUG TEMPORAL: esborrar després de veure el log ---
+        print("DEBUG reload_fs | ROOT_DIR:", cfg.ROOT_DIR, "| base_dir:", base_dir)
+        print("DEBUG total:", len(new_files), "| added:", len(self._added),
+              "| removed:", len(self._removed))
+        for f in self._added[:2]:
+            print("DEBUG added:", f, "| existeix a ROOT_DIR/f:",
+                  os.path.isfile(os.path.join(cfg.ROOT_DIR, f)))
  
     def files_added(self) -> list:
         return list(self._added)
