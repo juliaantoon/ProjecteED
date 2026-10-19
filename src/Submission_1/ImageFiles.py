@@ -29,45 +29,46 @@ Notes:
 """
 import os
 import cfg
-
+ 
+ 
 class ImageFiles:
-
+ 
     def __init__(self):
-        self._files = set()
-        self._added = []
-        self._removed = []
-        self._path = None
-
+        self._files = set()   # paths relatius a ROOT_DIR dels PNG actuals
+        self._added = []      # afegits des de l'última crida a reload_fs()
+        self._removed = []    # eliminats des de l'última crida a reload_fs()
+ 
     def reload_fs(self, path: str = None) -> None:
-        if path is not None:
-            self._path = path
-        elif self._path is None:
-            self._path = cfg.ROOT_DIR
-
-        base_dir = self._path
+        # Directori a recórrer: el indicat o, per defecte, el ROOT_DIR actual
+        base_dir = path if path is not None else cfg.ROOT_DIR
+        root_dir = cfg.ROOT_DIR
+ 
         new_files = set()
-
         if os.path.exists(base_dir):
-            for r, dirs, files in os.walk(base_dir): # recorre recursivament tots els subdirectoris a partir del path especificat
+            for r, dirs, files in os.walk(base_dir):
                 for file in files:
-                    if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
-                        full_path = os.path.join(r, file) # obtenim el path complet de l'arxiu
-                        rel_path = os.path.relpath(full_path, base_dir) # obtenim el path relatiu a partir del directori analitzat
-                        rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
-                        new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
-        
-        self._added = sorted(list(new_files - self._files)) # llista dels arcxius afegits
-        self._removed = sorted(list(self._files - new_files)) # llista dels arxius eliminats
-        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius 
-
+                    if file.lower().endswith(".png"):
+                        full_path = os.path.join(r, file)
+                        # IMPORTANT: relatiu a ROOT_DIR (no al directori recorregut)
+                        try:
+                            rel_path = os.path.relpath(full_path, root_dir)
+                        except ValueError:
+                            rel_path = full_path
+                        new_files.add(rel_path.replace("\\", "/"))
+ 
+        self._added = sorted(new_files - self._files)
+        self._removed = sorted(self._files - new_files)
+        self._files = new_files
+ 
     def files_added(self) -> list:
         return list(self._added)
-
+ 
     def files_removed(self) -> list:
         return list(self._removed)
-
+ 
     def __len__(self) -> int:
         return len(self._files)
-
+ 
     def __str__(self) -> str:
-        return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"
+        return (f"ImageFiles(afegits={len(self._added)}, "
+                f"eliminats={len(self._removed)}, total={len(self._files)})")
