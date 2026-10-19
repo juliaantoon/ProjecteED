@@ -138,10 +138,12 @@ class ImageData:
                 if v is not None and str(v).strip() != "":
                     dades[str(k).lower().strip()] = str(v)
 
+        # Suport extra per a paràmetres embeguts d'Stable Diffusion en el camp "parameters"
         params_str = dades.get("parameters", "")
         if params_str and dades.get("prompt") in [None, "None", ""]:
             parts = params_str.split("\nNegative prompt:")
             dades["prompt"] = parts[0].strip()
+            # Extracció de Model, Seed, Steps, Sampler si venen en una línia de paràmetres
             m_model = re.search(r"Model:\s*([^,]+)", params_str)
             if m_model and "model" not in dades:
                 dades["model"] = m_model.group(1).strip()
