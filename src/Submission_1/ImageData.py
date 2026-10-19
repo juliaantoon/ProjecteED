@@ -58,6 +58,7 @@ Notes:
 - Tots els camps de metadades es guarden com a strings
 """
 import os
+import re
 from PIL import Image
 import cfg
 
@@ -89,22 +90,17 @@ class ImageData:
     def _resolve_file(self, file_path: str) -> str:
         if not file_path or file_path == "None":
             return ""
-        # 1. Comprova si existeix tal qual
-        if os.path.isfile(file_path):
-            return os.path.abspath(file_path)
-        # 2. Comprova concatenat amb ROOT_DIR
-        c1 = os.path.join(cfg.ROOT_DIR, file_path)
-        if os.path.isfile(c1):
-            return os.path.abspath(c1)
-        # 3. Comprova normalitzat des de ROOT_DIR
-        c2 = os.path.normpath(c1)
-        if os.path.isfile(c2):
-            return os.path.abspath(c2)
-        # 4. Comprova des del directori pare de ROOT_DIR
-        c3 = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(cfg.ROOT_DIR)), file_path))
-        if os.path.isfile(c3):
-            return os.path.abspath(c3)
-        return file_path
+        candidats = [
+            file_path,
+            os.path.join(cfg.ROOT_DIR, file_path),
+            os.path.normpath(os.path.join(cfg.ROOT_DIR, file_path)),
+            os.path.abspath(file_path),
+            os.path.abspath(os.path.join(cfg.ROOT_DIR, file_path))
+        ]
+        for c in candidats:
+            if os.path.isfile(c):
+                return os.path.abspath(c)
+        return ""
 
     def load_metadata(self, uuid: str) -> None:
         if uuid not in self._images:
@@ -113,7 +109,8 @@ class ImageData:
         fitxer_original = self._images[uuid]["file"]
         ruta_resolta = self._resolve_file(fitxer_original)
 
-        if not os.path.isfile(ruta_resolta):
+        # Si el fitxer no existeix, no intentem llegir per evitar missatges d'error de cfg
+        if not ruta_resolta or not os.path.isfile(ruta_resolta):
             self._images[uuid]["dimensions"] = (0, 0)
             return
 
@@ -132,7 +129,6 @@ class ImageData:
         except Exception:
             metadades = {}
 
-        # Unim totes les fonts de metadades
         dades = {}
         if isinstance(raw_text, dict):
             for k, v in raw_text.items():
@@ -141,6 +137,26 @@ class ImageData:
             for k, v in metadades.items():
                 if v is not None and str(v).strip() != "":
                     dades[str(k).lower().strip()] = str(v)
+
+        params_str = dades.get("parameters", "")
+        if params_str and dades.get("prompt") in [None, "None", ""]:
+            parts = params_str.split("\nNegative prompt:")
+            dades["prompt"] = parts[0].strip()
+            m_model = re.search(r"Model:\s*([^,]+)", params_str)
+            if m_model and "model" not in dades:
+                dades["model"] = m_model.group(1).strip()
+            m_seed = re.search(r"Seed:\s*(\d+)", params_str)
+            if m_seed and "seed" not in dades:
+                dades["seed"] = m_seed.group(1).strip()
+            m_steps = re.search(r"Steps:\s*(\d+)", params_str)
+            if m_steps and "steps" not in dades:
+                dades["steps"] = m_steps.group(1).strip()
+            m_sampler = re.search(r"Sampler:\s*([^,]+)", params_str)
+            if m_sampler and "sampler" not in dades:
+                dades["sampler"] = m_sampler.group(1).strip()
+            m_cfg = re.search(r"CFG scale:\s*([\d\.]+)", params_str)
+            if m_cfg and "cfg_scale" not in dades:
+                dades["cfg_scale"] = m_cfg.group(1).strip()
 
         def _val(camp):
             v = dades.get(camp)
@@ -162,49 +178,49 @@ class ImageData:
             return None
         return str(self._images[uuid].get("file", "None"))
 
-    def get_prompt(self, uuid: str):  # Retorna el prompt utilitzat per generar la imatge
+    def get_prompt(self, uuid: str) -> str:  # Retorna el prompt utilitzat per generar la imatge
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("prompt", "None"))
 
-    def get_model(self, uuid: str):  # Retorna el model d'IA utilitzat 
+    def get_model(self, uuid: str) -> str:  # Retorna el model d'IA utilitzat 
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("model", "None"))
 
-    def get_seed(self, uuid: str):  # Retorna la llavor aleatòria utilitzada en la generació
+    def get_seed(self, uuid: str) -> str:  # Retorna la llavor aleatòria utilitzada en la generació
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("seed", "None"))
 
-    def get_cfg_scale(self, uuid: str):  # Retorna el guidance scale utilitzat
+    def get_cfg_scale(self, uuid: str) -> str:  # Retorna el guidance scale utilitzat
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("cfg_scale", "None"))
 
-    def get_steps(self, uuid: str):  # Retorna el nombre de passos d'iteració del model
+    def get_steps(self, uuid: str) -> str:  # Retorna el nombre de passos d'iteració del model
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("steps", "None"))
 
-    def get_sampler(self, uuid: str):  # Retorna l'algorisme de mostreig utilitzat
+    def get_sampler(self, uuid: str) -> str:  # Retorna l'algorisme de mostreig utilitzat
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("sampler", "None"))
 
-    def get_generated(self, uuid: str):  # Retorna "true" si la imatge està marcada com a generada
+    def get_generated(self, uuid: str) -> str:  # Retorna "true" si la imatge està marcada com a generada
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("generated", "None"))
 
-    def get_created_date(self, uuid: str):  # Retorna la data de creació en format YYYY-MM-DD
+    def get_created_date(self, uuid: str) -> str:  # Retorna la data de creació en format YYYY-MM-DD
         if uuid not in self._images:
-            return None
+            return "None"
         return str(self._images[uuid].get("created_date", "None"))
 
-    def get_dimensions(self, uuid: str):  # Retorna una tupla (width, height) amb les dimensions de la imatge
+    def get_dimensions(self, uuid: str) -> tuple:  # Retorna una tupla (width, height) amb les dimensions de la imatge
         if uuid not in self._images:
-            return None
+            return (0, 0)
         return self._images[uuid].get("dimensions", (0, 0))
 
     def __len__(self) -> int:

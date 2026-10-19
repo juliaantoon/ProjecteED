@@ -29,48 +29,50 @@ Notes:
 """
 import os
 import cfg
- 
- 
+
+
 class ImageFiles:
- 
+
     def __init__(self):
-        self._files = set()   # paths canònics dels PNG actuals
+        self._files = set()   # paths relatius dels PNG actuals
         self._added = []      # afegits des de l'última crida a reload_fs()
         self._removed = []    # eliminats des de l'última crida a reload_fs()
- 
+        self._last_path = None
+
     def reload_fs(self, path: str = None) -> None:
-        base_dir = path if path is not None else cfg.ROOT_DIR
- 
+        if path is not None:
+            self._last_path = path
+        elif self._last_path is None:
+            self._last_path = cfg.ROOT_DIR
+
+        scan_dir = self._last_path
         new_files = set()
-        if os.path.exists(base_dir):
-            for r, dirs, files in os.walk(base_dir):
+
+        if os.path.exists(scan_dir):
+            for r, dirs, files in os.walk(scan_dir): # recorre recursivament tots els subdirectoris a partir del path especificat
                 for file in files:
-                    if file.lower().endswith(".png"):
-                        full_path = os.path.join(r, file)
-                        # Format canònic oficial: relatiu a ROOT_DIR, amb "/"
-                        new_files.add(cfg.get_canonical_pathfile(full_path))
- 
-        self._added = sorted(new_files - self._files)
-        self._removed = sorted(self._files - new_files)
-        self._files = new_files
- 
-        # --- DEBUG TEMPORAL: esborrar després de veure el log ---
-        print("DEBUG reload_fs | ROOT_DIR:", cfg.ROOT_DIR, "| base_dir:", base_dir)
-        print("DEBUG total:", len(new_files), "| added:", len(self._added),
-              "| removed:", len(self._removed))
-        for f in self._added[:2]:
-            print("DEBUG added:", f, "| existeix a ROOT_DIR/f:",
-                  os.path.isfile(os.path.join(cfg.ROOT_DIR, f)))
- 
+                    if file.lower().endswith(".png"): # només considerem arxius amb extensió .png 
+                        full_path = os.path.join(r, file) # obtenim el path complet de l'arxiu
+                        # Si escanejem un directori extern (ex: temporal), relatiu a scan_dir; si no, relatiu a cfg.ROOT_DIR
+                        if path is not None and path != cfg.ROOT_DIR:
+                            rel_path = os.path.relpath(full_path, scan_dir)
+                        else:
+                            rel_path = os.path.relpath(full_path, cfg.ROOT_DIR)
+                        rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
+                        new_files.add(rel_path) # afegim la ruta relativa a la llista de nous arxius
+
+        self._added = sorted(list(new_files - self._files)) # llista dels arxius afegits
+        self._removed = sorted(list(self._files - new_files)) # llista dels arxius eliminats
+        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius
+
     def files_added(self) -> list:
         return list(self._added)
- 
+
     def files_removed(self) -> list:
         return list(self._removed)
- 
+
     def __len__(self) -> int:
         return len(self._files)
- 
+
     def __str__(self) -> str:
-        return (f"ImageFiles(afegits={len(self._added)}, "
-                f"eliminats={len(self._removed)}, total={len(self._files)})")
+        return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"
