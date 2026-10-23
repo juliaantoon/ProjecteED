@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Gallery.py : ** REQUIRED ** El vostre codi de la classe Gallery.
@@ -8,45 +9,6 @@ Funcionalitat:
 - Llegir galeries des d'arxius JSON
 - Visualitzar totes les imatges d'una galeria
 - Afegir i eliminar imatges de la galeria
-
-Format JSON d'una galeria:
-{
-  "gallery_name": "Cyberpunk Cities",
-  "description": "Collection of futuristic urban landscapes",
-  "created_date": "2025-09-30",
-  "images": [
-    "generated_images/city_001.png",
-    "generated_images/city_neon_12.png",
-    "generated_images/urban_street_45.png"
-  ]
-}
-
-Mètodes a implementar:
-- load_file(file: str) -> None
-        Llegeix un arxiu JSON amb la definició de la galeria.
-        Ha de validar que cada imatge referenciada existeix a la col·lecció.
-        Si una imatge no existeix, l'ignora i continua processant.
-        Emmagatzema internament els UUID de les imatges vàlides.
-
-- show() -> None
-        Visualitza totes les imatges de la galeria en ordre utilitzant
-        ImageViewer.show_image().
-
-- add_image_at_end(uuid: str) -> None
-        Afegeix una imatge al final de la galeria.
-
-- remove_first_image() -> None
-        Elimina la primera imatge de la galeria.
-
-- remove_last_image() -> None
-        Elimina l'última imatge de la galeria.
-
-Notes:
-- Utilitzeu la llibreria json per llegir els arxius
-- Els paths dins el JSON són relatius a ROOT_DIR
-- Cada galeria és un objecte independent (instància de Gallery)
-- Podeu tenir múltiples galeries actives simultàniament
-- Les operacions d'afegir/eliminar són ràpides (no busquen a la llista)
 """
 import os
 import json
@@ -69,34 +31,58 @@ class Gallery:
     def set_image_id(self, image_id) -> None:  # assigna o actualitza el gestor ImageID
         self._image_id = image_id
 
-    def _find_uuid(self, img_path: str): 
+    def _find_uuid(self, img_path: str):
         if self._image_id is None:
             return None
-        norm_p = img_path.replace("\\", "/") # normalitza el path per compatibilitat amb JSON i diferents sistemes operatius
-        root_dir_name = os.path.basename(os.path.normpath(cfg.ROOT_DIR)) # obtenim el nom del directori arrel de la col·lecció d'imatges
 
-        candidats = [norm_p] # llista de possibles paths per buscar l'UUID segons diferents formats (relatiu, absolut, només nom de fitxer)
-        if norm_p.startswith(root_dir_name + "/"): 
+        norm_p = str(img_path).replace("\\", "/") # normalitza el path per compatibilitat amb JSON i diferents sistemes operatius
+        root_dir = cfg.get_root()
+        root_dir_name = os.path.basename(os.path.normpath(root_dir))
+
+        candidats = [norm_p] # llista de possibles paths per buscar l'UUID segons diferents formats
+
+        # Si el JSON inclou generated_images/ al principi, traiem aquest directori
+        if norm_p.startswith(root_dir_name + "/"):
             candidats.append(norm_p[len(root_dir_name) + 1:])
-        else:
-            candidats.append(f"{root_dir_name}/{norm_p}")
+
+        # També provem el nom del fitxer sense directoris
         candidats.append(os.path.basename(norm_p))
 
+        # Provem les diferents rutes directament amb ImageID
         for c in candidats:
             uid = self._image_id.get_uuid(c)
-            if uid is not None and uid != "None":
+            if uid is not None:
                 return uid
+
+        # Comparem les rutes absolutes per si ImageID les havia guardat així
+        possibles_paths = set()
+        for c in candidats:
+            if os.path.isabs(c):
+                possibles_paths.add(os.path.normcase(os.path.realpath(c)))
+            else:
+                possibles_paths.add(os.path.normcase(os.path.realpath(os.path.join(root_dir, c))))
+
+        # Revisem els fitxers registrats a ImageID
+        for file_path, uid in getattr(self._image_id, "_file_to_uuid", {}).items():
+            if os.path.isabs(file_path):
+                path_registrat = os.path.normcase(os.path.realpath(file_path))
+            else:
+                path_registrat = os.path.normcase(os.path.realpath(os.path.join(root_dir, file_path)))
+
+            if path_registrat in possibles_paths:
+                return uid
+
         return None
 
-    def load_file(self, file: str) -> None: 
-        self._gallery_name = ""             
-        self._description = ""              
-        self._created_date = ""             
-        self._images = deque() 
+    def load_file(self, file: str) -> None:
+        self._gallery_name = ""
+        self._description = ""
+        self._created_date = ""
+        self._images = deque()
 
         full_path = file
         if not os.path.isfile(full_path):
-            full_path = os.path.join(cfg.ROOT_DIR, file)
+            full_path = os.path.join(cfg.get_root(), file)
 
         if not os.path.isfile(full_path):
             return
@@ -104,19 +90,25 @@ class Gallery:
         try:
             with open(full_path, 'r', encoding='utf-8') as f:  # obre l'arxiu usant la ruta completa
                 data = json.load(f)  # carrega les dades del fitxer JSON a un diccionari
-            self._gallery_name = str(data.get("gallery_name", ""))
-            self._description = str(data.get("description", ""))
-            self._created_date = str(data.get("created_date", ""))
 
-            raw_images = data.get("images", [])  # obté la llista d'imatges del JSON
+            self._gallery_name = str(data.get("gallery_name", data.get("name", "")))
+            self._description = str(data.get("description", ""))
+            self._created_date = str(data.get("created_date", data.get("creation_date", "")))
+
+            raw_images = data.get("images", []) # obté la llista d'imatges del JSON
+
+            if not isinstance(raw_images, list):
+                return
+
             for img_path in raw_images:
                 if self._image_id is not None:
-                    uuid = self._find_uuid(img_path)  # obté l'UUID de la imatge a partir del path
-                    if uuid:  # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
+                    uuid = self._find_uuid(img_path) # obté l'UUID de la imatge a partir del path
+                    if uuid is not None: # si l'UUID és vàlid, afegeix-lo a la llista d'imatges
                         self._images.append(uuid)
                 else:
                     self._images.append(img_path)
-        except Exception:
+
+        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
             self._gallery_name = ""
             self._description = ""
             self._created_date = ""
@@ -126,11 +118,13 @@ class Gallery:
         if self._viewer is None:
             print("Error: No s'ha configurat cap ImageViewer. No es poden mostrar les imatges.")
             return
+
         print(f"Galeria: {self._gallery_name}")
         print(f"Descripció: {self._description}")
         print(f"Total d'imatges: {len(self._images)}")
-        for uuid in list(self._images):
-            self._viewer.show_image(uuid)  # mostra cada imatge utilitzant el visualitzador
+
+        for uuid in self._images:
+            self._viewer.show_image(uuid) # mostra cada imatge utilitzant el visualitzador
 
     def add_image_at_end(self, uuid: str) -> None:  # afegeix una imatge al final de la galeria
         self._images.append(uuid)
