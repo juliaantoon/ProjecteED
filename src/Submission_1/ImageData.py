@@ -34,7 +34,7 @@ class ImageData:
             "sampler": None,
             "generated": None,
             "created_date": None,
-            "dimensions": None  # CANVI: tot a None (de Python) fins que es carreguin les metadades
+            "dimensions": (0, 0)
         }
 
     def remove_image(self, uuid: str) -> None:
@@ -89,7 +89,7 @@ class ImageData:
 
         except Exception as e:
             print(f"Error carregant metadades de {file_path}: {type(e).__name__}: {e}") # mostrem quin tipus d'error ha passat
-            self._images[u]["dimensions"] = None # reiniciem dimensions
+            self._images[u]["dimensions"] = (0, 0) # reiniciem dimensions a 0x0
             self._images[u]["prompt"] = None # deixem prompt per defecte
             self._images[u]["model"] = None # deixem model per defecte
             self._images[u]["seed"] = None # deixem seed per defecte
@@ -100,8 +100,6 @@ class ImageData:
             self._images[u]["created_date"] = None # deixem created_date per defecte
 
     def _valor(self, u: str, clau: str):
-        # CANVI: si la metadada encara no s'ha carregat (o ha fallat) retornem None de Python;
-        # si s'ha carregat, retornem el valor com a string (i "None" si el PNG no el tenia)
         v = self._images[u].get(clau)
         return None if v is None else str(v)
 
@@ -163,7 +161,7 @@ class ImageData:
         u = str(uuid)
         if u not in self._images:
             return None
-        return self._images[u].get("dimensions")
+        return self._images[u].get("dimensions", (0, 0))
 
     def __len__(self) -> int:
         return len(self._images)
