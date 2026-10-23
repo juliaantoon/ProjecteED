@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Gallery.py : ** REQUIRED ** El vostre codi de la classe Gallery.
@@ -81,6 +82,13 @@ class Gallery:
         else:
             candidats.append(f"{root_dir_name}/{norm_p}")
         candidats.append(os.path.basename(norm_p))
+
+        root_dir = cfg.get_root()
+
+        if norm_p.startswith(root_dir.replace("\\", "/") + "/"):
+            candidats.append(norm_p)
+        else:
+            candidats.append(os.path.join(root_dir, norm_p).replace("\\", "/"))
 
         for c in candidats:
             uid = self._image_id.get_uuid(c)

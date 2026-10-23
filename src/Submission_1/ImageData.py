@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 ImageData.py : ** REQUIRED ** El vostre codi de la classe ImageData.
@@ -118,7 +119,11 @@ class ImageData:
                 if raw_text is None: # si no trobem metadades, utilitzem diccionari buit
                     raw_text = {}
 
-                text_meta = {str(k).lower(): str(v) for k, v in raw_text.items()} # convertim claus a minúscules i valors a string
+                text_meta = {
+                    str(k).lower(): str(v) if v not in (None, "") else "None"
+                    for k, v in raw_text.items()
+                } # convertim claus a minúscules i valors buits a None
+
                 created_date = text_meta.get("created_date", "None") # obtenim la data de creació o None
 
                 self._images[u]["prompt"] = text_meta.get("prompt", "None") # guardem el prompt
