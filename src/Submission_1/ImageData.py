@@ -34,7 +34,7 @@ class ImageData:
             "sampler": "None",
             "generated": "None",
             "created_date": "None",
-            "dimensions": None  # CANVI (hipòtesi): abans (0, 0). Una imatge sense metadades llegides no té dimensions encara
+            "dimensions": (0, 0)  # (revertit: el canvi a None no va canviar res al test)
         }
 
     def remove_image(self, uuid: str) -> None:
@@ -157,7 +157,7 @@ class ImageData:
         u = str(uuid)
         if u not in self._images:
             return None
-        return self._images[u].get("dimensions", None)
+        return self._images[u].get("dimensions", (0, 0))
 
     def __len__(self) -> int:
         return len(self._images)

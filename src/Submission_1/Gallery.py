@@ -74,13 +74,18 @@ class Gallery:
         self._created_date = ""             
         self._images = deque() 
 
+        # CANVI 2: si no ens passen cap nom d'arxiu (None o ""), no peta: galeria buida i au.
+        # El test 5.0 (declaració) ho crida així i no vol cap excepció
+        if not file:
+            return
+
         full_path = file
         if not os.path.isfile(full_path):
             full_path = os.path.join(cfg.ROOT_DIR, file)
 
-        # CANVI: abans feia return i ja està; ara, si el JSON no existeix, la galeria
-        # queda buida (ja ho hem fet a dalt) i a més llancem FileNotFoundError.
-        # Això és el que feia que fallés el test 5.2 (fake JSON files)
+        # CANVI 1: abans feia return i ja està; ara, si el JSON NO existeix (però ens han
+        # passat un nom), la galeria queda buida (ja ho hem fet a dalt) i llancem
+        # FileNotFoundError. Això arregla el test 5.2 (fake JSON files)
         if not os.path.isfile(full_path):
             raise FileNotFoundError(f"Galeria '{file}' no trobada.")
 
