@@ -42,7 +42,7 @@ class ImageData:
             "sampler": None,
             "generated": None,
             "created_date": None,
-            "dimensions": (0, 0)
+            "dimensions": None
         }
 
     def remove_image(self, uuid: str) -> None:
@@ -97,7 +97,7 @@ class ImageData:
 
         except Exception as e:
             print(f"Error carregant metadades de {file_path}: {type(e).__name__}: {e}") # mostrem quin tipus d'error ha passat
-            self._images[u]["dimensions"] = (0, 0) # reiniciem dimensions a 0x0
+            self._images[u]["dimensions"] = None # reiniciem dimensions
             self._images[u]["prompt"] = None # deixem prompt per defecte
             self._images[u]["model"] = None # deixem model per defecte
             self._images[u]["seed"] = None # deixem seed per defecte
@@ -169,7 +169,7 @@ class ImageData:
         u = str(uuid)
         if u not in self._images:
             return None
-        return self._images[u].get("dimensions", (0, 0))
+        return self._images[u].get("dimensions")
 
     def __len__(self) -> int:
         return len(self._images)
