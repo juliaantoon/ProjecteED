@@ -36,10 +36,10 @@ class ImageFiles:
         self._files = set() # conjunt per emmagatzemar els paths relatius dels arxius PNG trobats
         self._added = [] # llista buida per emmagtzemar rutes dels fitxers que sacaben d'afegir
         self._removed = [] # llista buida per emmagatzemar rutes dels fitxers que s'han eliminat
-        self._path = None 
+        self._path = None
 
     def reload_fs(self, path: str = None) -> None:
-        if path is not None: # comprova si han psat el doc com a parametre path sino fa servir el per defecte ROOT_DIR
+        if path is not None: # comprova si han passat el path com a parametre, sino fa servir ROOT_DIR
             self._path = path
         elif self._path is None:
             self._path = cfg.ROOT_DIR
@@ -48,26 +48,26 @@ class ImageFiles:
         new_files = set()
 
         if os.path.exists(base_dir):
-            for r, dirs, files in os.walk(base_dir): # si la carpeta existeix entre a tot 
+            for r, dirs, files in os.walk(base_dir): # recorre tots els directoris
                 for file in files:
                     if file.lower().endswith(".png"): # comprova si es .png
-                        full_path = os.path.join(r, file) # obtenim el path complet de l'arxiu
-                        rel_path = os.path.abspath(full_path) # obtenim el path absolut de l'arxiu
-                        rel_path = rel_path.replace("\\", "/") # convertim els separadors de path a "/" per compatibilitat amb JSON
-                        new_files.add(rel_path) # afegim la ruta a la llista de nous arxius
-        
-        self._added = sorted(list(new_files - self._files)) # llista dels arcxius afegits
+                        full_path = os.path.join(r, file)
+                        rel_path = os.path.relpath(full_path, cfg.ROOT_DIR) # obtenim el path relatiu a ROOT_DIR
+                        rel_path = rel_path.replace("\\", "/") # normalitzem els separadors
+                        new_files.add(rel_path) # afegim la ruta relativa
+
+        self._added = sorted(list(new_files - self._files)) # llista dels arxius afegits
         self._removed = sorted(list(self._files - new_files)) # llista dels arxius eliminats
-        self._files = new_files # actualitzem la llista d'arxius amb els nous arxius 
+        self._files = new_files # actualitzem la llista d'arxius
 
     def files_added(self) -> list:
-        return list(self._added) # retorna la llista dels arxius afegits des de l'ultima crida 
+        return list(self._added) # retorna els arxius afegits des de l'ultima crida
 
     def files_removed(self) -> list:
-        return list(self._removed) # retorna la llista dels arxius eliminats des de l'ultima crida
+        return list(self._removed) # retorna els arxius eliminats des de l'ultima crida
 
     def __len__(self) -> int:
-        return len(self._files) # retorna el nombre total d'arxius PNG trobats a la carpeta i subcarpetes
+        return len(self._files) # retorna el nombre total d'arxius PNG
 
     def __str__(self) -> str:
         return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"

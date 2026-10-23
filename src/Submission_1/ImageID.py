@@ -31,40 +31,50 @@ Notes:
     - Els UUID s'emmagatzemen com a strings
     - Un UUID només es pot generar una vegada (fins que s'elimini)
 """
+import os
 import cfg
 
 class ImageID:
     def __init__(self):
         self._file_to_uuid = {}        # diccionari per saber quin uuid té cada fitxer
-        self._active_uuids = set()     # conjunt per saber quins uuid estan actius (evita duplicats)
-        self._uuid_to_file = {}        # diccionari per saber quin fitxer té cada uuid (per fer cerques inverses)
-    
-    def generate_uuid(self, file: str) -> str:
-        new_uuid = str(cfg.get_uuid(file))  # generem un nou uuid 
+        self._active_uuids = set()     # conjunt per saber quins uuid estan actius
+        self._uuid_to_file = {}        # diccionari per saber quin fitxer té cada uuid
 
-        if new_uuid in self._active_uuids:  # comprovem si ja existeix (col·lisió)
+    def generate_uuid(self, file: str) -> str:
+        if not isinstance(file, str) or not file:
+            return None
+
+        canonical_file = cfg.get_canonical_pathfile(file) # obtenim el path canònic del fitxer
+        canonical_file = canonical_file.replace("\\", "/") # normalitzem els separadors
+
+        new_uuid = str(cfg.get_uuid(canonical_file)) # generem el UUID a partir del path canònic
+
+        if new_uuid in self._active_uuids: # comprovem si ja existeix
             print(f"Error: UUID {new_uuid} ja existeix per a un altre fitxer.")
             return None
-        else:
-            self._active_uuids.add(new_uuid) # afegim el nou uuid al conjunt d'uuids actius
-            self._file_to_uuid[file] = new_uuid # associem el fitxer amb el nou uuid
-            self._uuid_to_file[new_uuid] = file # associem el nou uuid amb el fitxer corresponent
-            return new_uuid # retornem el nou uuid generat
 
-    def get_uuid(self, file: str) -> str: # retorna l'uuid associat a un fitxer si existeix, sino retorna None
-        if file in self._file_to_uuid: # comprova si la ruta file es clau del diccionari _file_to_uuid
-            return self._file_to_uuid[file] # si es retorna el uuid associat
-        else:
-            return None # si no s'ha registrat mai retorna None
+        self._active_uuids.add(new_uuid) # afegim el nou uuid al conjunt d'uuids actius
+        self._file_to_uuid[canonical_file] = new_uuid # associem el fitxer amb el uuid
+        self._uuid_to_file[new_uuid] = canonical_file # associem el uuid amb el fitxer
+        return new_uuid # retornem el uuid generat
+
+    def get_uuid(self, file: str) -> str:
+        if not isinstance(file, str):
+            return None
+
+        canonical_file = cfg.get_canonical_pathfile(file) # obtenim el path canònic
+        canonical_file = canonical_file.replace("\\", "/") # normalitzem els separadors
+        return self._file_to_uuid.get(canonical_file) # retornem el uuid o None si no existeix
 
     def remove_uuid(self, uuid: str) -> None:
-        if uuid in self._active_uuids: # comproba si l'uuid està actiu
-            self._active_uuids.remove(uuid) # si hi es, s'elimina del conjunt d'uuids actius
-            file = self._uuid_to_file.pop(uuid, None) # tmb l'esborra del diccionari invers _uuid_to_file
-            if file is not None: # tmb s'elimina del diccionari _file_to_uuid 
-                self._file_to_uuid.pop(file, None) 
-    
+        if uuid in self._active_uuids: # comprovem si l'uuid està actiu
+            self._active_uuids.remove(uuid) # eliminem l'uuid del conjunt
+            file = self._uuid_to_file.pop(uuid, None) # obtenim i eliminem el fitxer associat
+            if file is not None:
+                self._file_to_uuid.pop(file, None) # eliminem també la relació inversa
+
     def __len__(self) -> int:
-        return len(self._file_to_uuid) # retorna el nombre d'identificadors actius (UUID) en aquell moment
+        return len(self._file_to_uuid)
+
     def __str__(self) -> str:
-        return f"ImageID(identificadors={len(self._file_to_uuid)})" 
+        return f"ImageID(identificadors={len(self._file_to_uuid)})"

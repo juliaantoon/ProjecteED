@@ -56,84 +56,103 @@ Notes:
 class SearchMetadata:
 
     def __init__(self, image_data=None):
-        self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
+        self._image_data = image_data
 
-    def _cercar(self, nom_getter: str, sub) -> list:  # rep el nom del getter
+    def _cercar(self, nom_getter: str, sub) -> list:
         llista_uuids = []
+
         if self._image_data is None or sub is None:
             return llista_uuids
+
         sub_str = str(sub)
         getter = getattr(self._image_data, nom_getter, None)
-        if getter is None:
+
+        if not callable(getter):
             return llista_uuids
+
         for uuid in getattr(self._image_data, "_images", {}):
             valor = getter(uuid)
+
             if valor is not None and valor != "None":
                 if str(valor).find(sub_str) != -1:
                     llista_uuids.append(uuid)
+
         return llista_uuids
 
-    def prompt(self, sub: str) -> list: 
-        return self._cercar("get_prompt", sub)                          # busca la subcadena en el camp Prompt de les metadades de les imatges
+    def prompt(self, sub: str) -> list:
+        return self._cercar("get_prompt", sub)
 
     def model(self, sub: str) -> list:
-        return self._cercar("get_model", sub)                           # busca la subcadena en el camp Model de les metadades de les imatges
+        return self._cercar("get_model", sub)
 
     def seed(self, sub: str) -> list:
-        return self._cercar("get_seed", sub)                            # busca la subcadena en el camp Seed de les metadades de les imatges
+        return self._cercar("get_seed", sub)
 
     def cfg_scale(self, sub: str) -> list:
-        return self._cercar("get_cfg_scale", sub)                       # busca la subcadena en el camp CFG_Scale de les metadades de les imatges
+        return self._cercar("get_cfg_scale", sub)
 
     def steps(self, sub: str) -> list:
-        return self._cercar("get_steps", sub)                           # busca la subcadena en el camp Steps de les metadades de les imatges
+        return self._cercar("get_steps", sub)
 
     def sampler(self, sub: str) -> list:
-        return self._cercar("get_sampler", sub)                         # busca la subcadena en el camp Sampler de les metadades de les imatges
+        return self._cercar("get_sampler", sub)
 
     def date(self, sub: str) -> list:
-        return self._cercar("get_created_date", sub)                    # busca la subcadena en el camp Created_Date de les metadades de les imatges
+        return self._cercar("get_created_date", sub)
 
     def generated(self, sub: str) -> list:
-        return self._cercar("get_generated", sub) 
+        return self._cercar("get_generated", sub)
 
     def dimensions(self, width, height) -> list:
         llista_uuids = []
+
         if self._image_data is None or width is None or height is None:
             return llista_uuids
-        try:                                          
-            w_val, h_val = int(width), int(height)
+
+        try:
+            w_val = int(width)
+            h_val = int(height)
         except (TypeError, ValueError):
             return llista_uuids
+
         for uuid in getattr(self._image_data, "_images", {}):
             dims = self._image_data.get_dimensions(uuid)
+
             if dims is not None and tuple(dims) == (w_val, h_val):
                 llista_uuids.append(uuid)
+
         return llista_uuids
 
-    def and_operator(self, list1: list, list2: list) -> list: # intersecció de conjunts
+    def and_operator(self, list1: list, list2: list) -> list:
         if list1 is None or list2 is None:
             return []
+
         en_list2 = set(list2)
         vistos = set()
         resultat = []
+
         for u in list1:
             if u in en_list2 and u not in vistos:
                 vistos.add(u)
                 resultat.append(u)
+
         return resultat
 
-    def or_operator(self, list1: list, list2: list) -> list: # unió de conjunts
+    def or_operator(self, list1: list, list2: list) -> list:
         if list1 is None and list2 is None:
             return []
+
         l1 = list1 if list1 is not None else []
         l2 = list2 if list2 is not None else []
+
         vistos = set()
         resultat = []
+
         for u in l1 + l2:
             if u not in vistos:
                 vistos.add(u)
                 resultat.append(u)
+
         return resultat
 
     def __str__(self) -> str:
