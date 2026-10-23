@@ -31,77 +31,40 @@ Notes:
     - Els UUID s'emmagatzemen com a strings
     - Un UUID només es pot generar una vegada (fins que s'elimini)
 """
-import os
 import cfg
 
-
 class ImageID:
-
     def __init__(self):
-        self._file_to_uuid = {}
-        self._active_uuids = set()
-        self._uuid_to_file = {}
-
-    def _canonical_file(self, file):
-        if not isinstance(file, str) or not file:
-            return None
-
-        root = os.path.abspath(cfg.ROOT_DIR)
-
-        # Si el path és absolut, el convertim a relatiu a ROOT_DIR.
-        if os.path.isabs(file):
-            canonical_file = os.path.relpath(file, root)
-
-        else:
-            canonical_file = file.replace("\\", "/")
-
-            # Si ja inclou el nom de ROOT_DIR, l'eliminem.
-            root_name = os.path.basename(os.path.normpath(root))
-
-            if canonical_file.startswith(root_name + "/"):
-                canonical_file = canonical_file[len(root_name) + 1:]
-
-        canonical_file = os.path.normpath(canonical_file)
-        return canonical_file.replace("\\", "/")
-
+        self._file_to_uuid = {}        # diccionari per saber quin uuid té cada fitxer
+        self._active_uuids = set()     # conjunt per saber quins uuid estan actius (evita duplicats)
+        self._uuid_to_file = {}        # diccionari per saber quin fitxer té cada uuid (per fer cerques inverses)
+    
     def generate_uuid(self, file: str) -> str:
-        canonical_file = self._canonical_file(file)
+        new_uuid = str(cfg.get_uuid(file))  # generem un nou uuid 
 
-        if canonical_file is None:
-            return None
-
-        new_uuid = str(cfg.get_uuid(canonical_file))
-
-        # Comprovem que l'UUID no estigui actiu.
-        if new_uuid in self._active_uuids:
+        if new_uuid in self._active_uuids:  # comprovem si ja existeix (col·lisió)
             print(f"Error: UUID {new_uuid} ja existeix per a un altre fitxer.")
             return None
+        else:
+            self._active_uuids.add(new_uuid) # afegim el nou uuid al conjunt d'uuids actius
+            self._file_to_uuid[file] = new_uuid # associem el fitxer amb el nou uuid
+            self._uuid_to_file[new_uuid] = file # associem el nou uuid amb el fitxer corresponent
+            return new_uuid # retornem el nou uuid generat
 
-        self._active_uuids.add(new_uuid)
-        self._file_to_uuid[canonical_file] = new_uuid
-        self._uuid_to_file[new_uuid] = canonical_file
-
-        return new_uuid
-
-    def get_uuid(self, file: str) -> str:
-        canonical_file = self._canonical_file(file)
-
-        if canonical_file is None:
-            return None
-
-        return self._file_to_uuid.get(canonical_file)
+    def get_uuid(self, file: str) -> str: # retorna l'uuid associat a un fitxer si existeix, sino retorna None
+        if file in self._file_to_uuid: # comprova si la ruta file es clau del diccionari _file_to_uuid
+            return self._file_to_uuid[file] # si es retorna el uuid associat
+        else:
+            return None # si no s'ha registrat mai retorna None
 
     def remove_uuid(self, uuid: str) -> None:
-        if uuid in self._active_uuids:
-            self._active_uuids.remove(uuid)
-
-            file = self._uuid_to_file.pop(uuid, None)
-
-            if file is not None:
-                self._file_to_uuid.pop(file, None)
-
+        if uuid in self._active_uuids: # comproba si l'uuid està actiu
+            self._active_uuids.remove(uuid) # si hi es, s'elimina del conjunt d'uuids actius
+            file = self._uuid_to_file.pop(uuid, None) # tmb l'esborra del diccionari invers _uuid_to_file
+            if file is not None: # tmb s'elimina del diccionari _file_to_uuid 
+                self._file_to_uuid.pop(file, None) 
+    
     def __len__(self) -> int:
-        return len(self._active_uuids)
-
+        return len(self._file_to_uuid) # retorna el nombre d'identificadors actius (UUID) en aquell moment
     def __str__(self) -> str:
-        return f"ImageID(identificadors={len(self._active_uuids)})"
+        return f"ImageID(identificadors={len(self._file_to_uuid)})" 

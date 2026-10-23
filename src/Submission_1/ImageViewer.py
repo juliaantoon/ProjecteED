@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 ImageViewer.py : ** REQUIRED ** El vostre codi de la classe ImageViewer.
@@ -45,31 +44,27 @@ Notes:
 - Gestioneu les excepcions si la imatge no es pot mostrar
 - El format de sortida ha de ser llegible i ben organitzat
 """
-import cfg
-import os
+import cfg, os
 from PIL import Image
-
 
 class ImageViewer:
     def __init__(self, image_data=None):
-        self._image_data = image_data  # guarda la instancia de ImageData
+        self._image_data = image_data # guarda la instania de imagedata que conte la info tecnica de les imatges
 
-    def set_image_data(self, image_data: object) -> None:
+    def set_image_data(self, image_data: object) -> None:   # ens permet actualitzar l'objecte ImageData si cal
         self._image_data = image_data
 
-    def print_image(self, uuid: str) -> None:
-        if self._image_data is None:
+    def print_image(self, uuid: str) -> None: # Imprimeix per pantalla totes les metadades de la imatge identificada per l'UUID
+        if self._image_data is None: # mira si esta configurat sino surt error
             print("Error: No s'ha configurat cap instància d'ImageData a ImageViewer.")
             return
-
+        
         file_path = self._image_data.get_filename(uuid)
         prompt_val = self._image_data.get_prompt(uuid)
-
         if prompt_val and prompt_val != "None" and len(prompt_val) > 50:
-            prompt_val = prompt_val[:50] + "..."
+            prompt_val = prompt_val[:50] + "..."  # Truncar el prompt si és molt llarg
 
         dims = self._image_data.get_dimensions(uuid)
-
         if dims and isinstance(dims, (tuple, list)) and len(dims) >= 2:
             dims_txt = f"{dims[0]} x {dims[1]}"
         else:
@@ -89,26 +84,25 @@ class ImageViewer:
             "Path": file_path if file_path is not None else "None"
         }
 
+        # Imprimim les metadades de manera llegible
         print("Metadades de la imatge:")
         for key, value in metadata.items():
             print(f"{key}: {value}")
 
-    def show_file(self, file: str) -> None:
-        if not file or file == "None":
+    def show_file(self, file: str) -> None: # Mostra la imatge especificada utilitzant PIL 
+        if not file or file == "None": # si no hi ha ruta de fitxer, surt de la funció
             return
-
         if not os.path.isfile(file):
             file = os.path.join(cfg.ROOT_DIR, file)
-
         try:
-            with Image.open(file) as img:
-                img.show()
+            with Image.open(file) as img:  # Obrim la imatge amb Pillow
+                img.show()  # Obre el visor d'imatges del sistema operatiu
         except Exception as e:
-            print(f"Error en mostrar el fitxer '{file}': {e}")
+            print(f"Error en mostrar el fitxer '{file}': {e}")  # Gestió d'errors si la imatge no existeix 
 
     def show_image(self, uuid: str, mode: int = None) -> None:
         if mode is None:
-            mode = cfg.DISPLAY_MODE
+            mode = cfg.DISPLAY_MODE  # obte el mode per defecte
 
         if self._image_data is None:
             print("Error: No s'ha configurat cap instància d'ImageData a ImageViewer.")
@@ -116,20 +110,17 @@ class ImageViewer:
 
         file_path = self._image_data.get_filename(uuid)
 
-        if mode == 0:
+        if mode == 0: # només metadades
             self.print_image(uuid)
 
-        elif mode == 1:
+        elif mode == 1: # metadades + imatge
             self.print_image(uuid)
-            if file_path and file_path != "None":
+            if file_path and file_path != "None":  # comprovem que el fitxer sigui valid
                 self.show_file(file_path)
-                input("Prem Enter quan hagis tancat la imatge per continuar...")
 
-        elif mode == 2:
-            if file_path and file_path != "None":
+        elif mode == 2: # ºnomés imatge
+            if file_path and file_path != "None":  # comprovem que el fitxer sigui valid
                 self.show_file(file_path)
-                input("Prem Enter quan hagis tancat la imatge per continuar...")
-
         else:
             print(f"Mode desconegut: {mode}. Utilitzeu 0, 1 o 2.")
 
