@@ -26,15 +26,15 @@ class ImageData:
         u = str(uuid) # convertim l'UUID a string per assegurar que coincideixi sempre com a clau
         self._images[u] = {
             "file": str(file),
-            "prompt": "None",
-            "model": "None",
-            "seed": "None",
-            "cfg_scale": "None",
-            "steps": "None",
-            "sampler": "None",
-            "generated": "None",
-            "created_date": "None",
-            "dimensions": (0, 0)  # (revertit: el canvi a None no va canviar res al test)
+            "prompt": None,
+            "model": None,
+            "seed": None,
+            "cfg_scale": None,
+            "steps": None,
+            "sampler": None,
+            "generated": None,
+            "created_date": None,
+            "dimensions": None  # CANVI: tot a None (de Python) fins que es carreguin les metadades
         }
 
     def remove_image(self, uuid: str) -> None:
@@ -89,15 +89,21 @@ class ImageData:
 
         except Exception as e:
             print(f"Error carregant metadades de {file_path}: {type(e).__name__}: {e}") # mostrem quin tipus d'error ha passat
-            self._images[u]["dimensions"] = (0, 0) # reiniciem dimensions a 0x0
-            self._images[u]["prompt"] = "None" # deixem prompt per defecte
-            self._images[u]["model"] = "None" # deixem model per defecte
-            self._images[u]["seed"] = "None" # deixem seed per defecte
-            self._images[u]["cfg_scale"] = "None" # deixem cfg_scale per defecte
-            self._images[u]["steps"] = "None" # deixem steps per defecte
-            self._images[u]["sampler"] = "None" # deixem sampler per defecte
-            self._images[u]["generated"] = "None" # deixem generated per defecte
-            self._images[u]["created_date"] = "None" # deixem created_date per defecte
+            self._images[u]["dimensions"] = None # reiniciem dimensions
+            self._images[u]["prompt"] = None # deixem prompt per defecte
+            self._images[u]["model"] = None # deixem model per defecte
+            self._images[u]["seed"] = None # deixem seed per defecte
+            self._images[u]["cfg_scale"] = None # deixem cfg_scale per defecte
+            self._images[u]["steps"] = None # deixem steps per defecte
+            self._images[u]["sampler"] = None # deixem sampler per defecte
+            self._images[u]["generated"] = None # deixem generated per defecte
+            self._images[u]["created_date"] = None # deixem created_date per defecte
+
+    def _valor(self, u: str, clau: str):
+        # CANVI: si la metadada encara no s'ha carregat (o ha fallat) retornem None de Python;
+        # si s'ha carregat, retornem el valor com a string (i "None" si el PNG no el tenia)
+        v = self._images[u].get(clau)
+        return None if v is None else str(v)
 
     def get_filename(self, uuid: str): # retorna la ruta original de l'arxiu guardat
         u = str(uuid)
@@ -109,78 +115,58 @@ class ImageData:
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("prompt", "None"))
+        return self._valor(u, "prompt")
 
     def get_model(self, uuid: str):  # Retorna el model d'IA utilitzat 
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("model", "None"))
+        return self._valor(u, "model")
 
     def get_seed(self, uuid: str):  # Retorna la llavor aleatòria utilitzada en la generació
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("seed", "None"))
+        return self._valor(u, "seed")
 
     def get_cfg_scale(self, uuid: str):  # Retorna el guidance scale utilitzat
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("cfg_scale", "None"))
+        return self._valor(u, "cfg_scale")
 
     def get_steps(self, uuid: str):  # Retorna el nombre de passos d'iteració del model
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("steps", "None"))
+        return self._valor(u, "steps")
 
     def get_sampler(self, uuid: str):  # Retorna l'algorisme de mostreig utilitzat
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("sampler", "None"))
+        return self._valor(u, "sampler")
 
     def get_generated(self, uuid: str):  # Retorna "true" si la imatge està marcada com a generada
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("generated", "None"))
+        return self._valor(u, "generated")
 
     def get_created_date(self, uuid: str):  # Retorna la data de creació en format YYYY-MM-DD
         u = str(uuid)
         if u not in self._images:
             return None
-        return str(self._images[u].get("created_date", "None"))
+        return self._valor(u, "created_date")
 
     def get_dimensions(self, uuid: str):  # Retorna una tupla (width, height) amb les dimensions de la imatge
         u = str(uuid)
         if u not in self._images:
             return None
-        return self._images[u].get("dimensions", (0, 0))
+        return self._images[u].get("dimensions")
 
     def __len__(self) -> int:
         return len(self._images)
 
     def __str__(self) -> str:
-        return f"ImageData(imatges={len(self._images)})" 
-
-
-    import functools as _ft
-
-def _dbg(fn):
-    @_ft.wraps(fn)
-    def w(self, *a, **k):
-        try:
-            r = fn(self, *a, **k)
-        except Exception as e:
-            print(f"[DBG] {fn.__name__}{a!r} -> EXC {type(e).__name__}: {e}"[:200])
-            raise
-        print(f"[DBG] {fn.__name__}{a!r}{k or ''} -> {r!r}"[:200])
-        return r
-    return w
-
-for _n in ["add_image", "remove_image", "load_metadata", "get_filename", "get_prompt",
-           "get_model", "get_seed", "get_cfg_scale", "get_steps", "get_sampler",
-           "get_generated", "get_created_date", "get_dimensions", "__len__", "__str__"]:
-    setattr(ImageData, _n, _dbg(getattr(ImageData, _n)))
+        return f"ImageData(imatges={len(self._images)})"
