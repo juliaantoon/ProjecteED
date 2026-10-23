@@ -34,47 +34,74 @@ Notes:
 import os
 import cfg
 
-class ImageID:
-    def __init__(self):
-        self._file_to_uuid = {}        # diccionari per saber quin uuid té cada fitxer
-        self._active_uuids = set()     # conjunt per saber quins uuid estan actius
-        self._uuid_to_file = {}        # diccionari per saber quin fitxer té cada uuid
 
-    def generate_uuid(self, file: str) -> str:
+class ImageID:
+
+    def __init__(self):
+        self._file_to_uuid = {}
+        self._active_uuids = set()
+        self._uuid_to_file = {}
+
+    def _canonical_file(self, file):
         if not isinstance(file, str) or not file:
             return None
 
-        canonical_file = cfg.get_canonical_pathfile(file) # obtenim el path canònic del fitxer
-        canonical_file = canonical_file.replace("\\", "/") # normalitzem els separadors
+        root = os.path.abspath(cfg.ROOT_DIR)
 
-        new_uuid = str(cfg.get_uuid(canonical_file)) # generem el UUID a partir del path canònic
+        # Si el path és absolut, el convertim a relatiu a ROOT_DIR.
+        if os.path.isabs(file):
+            canonical_file = os.path.relpath(file, root)
 
-        if new_uuid in self._active_uuids: # comprovem si ja existeix
+        else:
+            canonical_file = file.replace("\\", "/")
+
+            # Si ja inclou el nom de ROOT_DIR, l'eliminem.
+            root_name = os.path.basename(os.path.normpath(root))
+
+            if canonical_file.startswith(root_name + "/"):
+                canonical_file = canonical_file[len(root_name) + 1:]
+
+        canonical_file = os.path.normpath(canonical_file)
+        return canonical_file.replace("\\", "/")
+
+    def generate_uuid(self, file: str) -> str:
+        canonical_file = self._canonical_file(file)
+
+        if canonical_file is None:
+            return None
+
+        new_uuid = str(cfg.get_uuid(canonical_file))
+
+        # Comprovem que l'UUID no estigui actiu.
+        if new_uuid in self._active_uuids:
             print(f"Error: UUID {new_uuid} ja existeix per a un altre fitxer.")
             return None
 
-        self._active_uuids.add(new_uuid) # afegim el nou uuid al conjunt d'uuids actius
-        self._file_to_uuid[canonical_file] = new_uuid # associem el fitxer amb el uuid
-        self._uuid_to_file[new_uuid] = canonical_file # associem el uuid amb el fitxer
-        return new_uuid # retornem el uuid generat
+        self._active_uuids.add(new_uuid)
+        self._file_to_uuid[canonical_file] = new_uuid
+        self._uuid_to_file[new_uuid] = canonical_file
+
+        return new_uuid
 
     def get_uuid(self, file: str) -> str:
-        if not isinstance(file, str):
+        canonical_file = self._canonical_file(file)
+
+        if canonical_file is None:
             return None
 
-        canonical_file = cfg.get_canonical_pathfile(file) # obtenim el path canònic
-        canonical_file = canonical_file.replace("\\", "/") # normalitzem els separadors
-        return self._file_to_uuid.get(canonical_file) # retornem el uuid o None si no existeix
+        return self._file_to_uuid.get(canonical_file)
 
     def remove_uuid(self, uuid: str) -> None:
-        if uuid in self._active_uuids: # comprovem si l'uuid està actiu
-            self._active_uuids.remove(uuid) # eliminem l'uuid del conjunt
-            file = self._uuid_to_file.pop(uuid, None) # obtenim i eliminem el fitxer associat
+        if uuid in self._active_uuids:
+            self._active_uuids.remove(uuid)
+
+            file = self._uuid_to_file.pop(uuid, None)
+
             if file is not None:
-                self._file_to_uuid.pop(file, None) # eliminem també la relació inversa
+                self._file_to_uuid.pop(file, None)
 
     def __len__(self) -> int:
-        return len(self._file_to_uuid)
+        return len(self._active_uuids)
 
     def __str__(self) -> str:
-        return f"ImageID(identificadors={len(self._file_to_uuid)})"
+        return f"ImageID(identificadors={len(self._active_uuids)})"

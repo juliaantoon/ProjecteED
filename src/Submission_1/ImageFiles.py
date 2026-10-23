@@ -30,44 +30,62 @@ Notes:
 import os
 import cfg
 
+
 class ImageFiles:
 
     def __init__(self):
-        self._files = set() # conjunt per emmagatzemar els paths relatius dels arxius PNG trobats
-        self._added = [] # llista buida per emmagtzemar rutes dels fitxers que sacaben d'afegir
-        self._removed = [] # llista buida per emmagatzemar rutes dels fitxers que s'han eliminat
-        self._path = None
+        self._files = set()
+        self._added = []
+        self._removed = []
 
     def reload_fs(self, path: str = None) -> None:
-        if path is not None: # comprova si han passat el path com a parametre, sino fa servir ROOT_DIR
-            self._path = path
-        elif self._path is None:
-            self._path = cfg.ROOT_DIR
 
-        base_dir = self._path
+        # Si no indiquem cap ruta, utilitzem ROOT_DIR.
+        if path is None:
+            base_dir = cfg.ROOT_DIR
+        else:
+            base_dir = path
+
+        base_dir = os.path.abspath(base_dir)
         new_files = set()
 
-        if os.path.exists(base_dir):
-            for r, dirs, files in os.walk(base_dir): # recorre tots els directoris
-                for file in files:
-                    if file.lower().endswith(".png"): # comprova si es .png
-                        full_path = os.path.join(r, file)
-                        rel_path = os.path.relpath(full_path, cfg.ROOT_DIR) # obtenim el path relatiu a ROOT_DIR
-                        rel_path = rel_path.replace("\\", "/") # normalitzem els separadors
-                        new_files.add(rel_path) # afegim la ruta relativa
+        # Comprovem que el directori existeix.
+        if os.path.isdir(base_dir):
 
-        self._added = sorted(list(new_files - self._files)) # llista dels arxius afegits
-        self._removed = sorted(list(self._files - new_files)) # llista dels arxius eliminats
-        self._files = new_files # actualitzem la llista d'arxius
+            # Recorrem tots els directoris i subdirectoris.
+            for r, dirs, files in os.walk(base_dir):
+                for file in files:
+
+                    # Només acceptem fitxers PNG.
+                    if file.lower().endswith(".png"):
+                        full_path = os.path.join(r, file)
+
+                        # Obtenim la ruta relativa a ROOT_DIR.
+                        rel_path = os.path.relpath(
+                            full_path,
+                            cfg.ROOT_DIR
+                        )
+
+                        # Normalitzem els separadors.
+                        rel_path = rel_path.replace("\\", "/")
+
+                        new_files.add(rel_path)
+
+        # Detectem els fitxers nous i eliminats.
+        self._added = sorted(new_files - self._files)
+        self._removed = sorted(self._files - new_files)
+
+        # Actualitzem el conjunt de fitxers.
+        self._files = new_files
 
     def files_added(self) -> list:
-        return list(self._added) # retorna els arxius afegits des de l'ultima crida
+        return list(self._added)
 
     def files_removed(self) -> list:
-        return list(self._removed) # retorna els arxius eliminats des de l'ultima crida
+        return list(self._removed)
 
     def __len__(self) -> int:
-        return len(self._files) # retorna el nombre total d'arxius PNG
+        return len(self._files)
 
     def __str__(self) -> str:
         return f"ImageFiles(afegits={len(self._added)}, eliminats={len(self._removed)}, total={len(self._files)})"
