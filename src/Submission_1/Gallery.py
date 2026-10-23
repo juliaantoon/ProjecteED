@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Gallery.py : ** REQUIRED ** El vostre codi de la classe Gallery.
@@ -21,26 +20,6 @@ Format JSON d'una galeria:
     "generated_images/urban_street_45.png"
   ]
 }
-
-Mètodes a implementar:
-- load_file(file: str) -> None
-        Llegeix un arxiu JSON amb la definició de la galeria.
-        Ha de validar que cada imatge referenciada existeix a la col·lecció.
-        Si una imatge no existeix, l'ignora i continua processant.
-        Emmagatzema internament els UUID de les imatges vàlides.
-
-- show() -> None
-        Visualitza totes les imatges de la galeria en ordre utilitzant
-        ImageViewer.show_image().
-
-- add_image_at_end(uuid: str) -> None
-        Afegeix una imatge al final de la galeria.
-
-- remove_first_image() -> None
-        Elimina la primera imatge de la galeria.
-
-- remove_last_image() -> None
-        Elimina l'última imatge de la galeria.
 
 Notes:
 - Utilitzeu la llibreria json per llegir els arxius
@@ -83,13 +62,6 @@ class Gallery:
             candidats.append(f"{root_dir_name}/{norm_p}")
         candidats.append(os.path.basename(norm_p))
 
-        root_dir = cfg.get_root()
-
-        if norm_p.startswith(root_dir.replace("\\", "/") + "/"):
-            candidats.append(norm_p)
-        else:
-            candidats.append(os.path.join(root_dir, norm_p).replace("\\", "/"))
-
         for c in candidats:
             uid = self._image_id.get_uuid(c)
             if uid is not None and uid != "None":
@@ -106,8 +78,11 @@ class Gallery:
         if not os.path.isfile(full_path):
             full_path = os.path.join(cfg.ROOT_DIR, file)
 
+        # CANVI: abans feia return i ja està; ara, si el JSON no existeix, la galeria
+        # queda buida (ja ho hem fet a dalt) i a més llancem FileNotFoundError.
+        # Això és el que feia que fallés el test 5.2 (fake JSON files)
         if not os.path.isfile(full_path):
-            return
+            raise FileNotFoundError(f"Galeria '{file}' no trobada.")
 
         try:
             with open(full_path, 'r', encoding='utf-8') as f:  # obre l'arxiu usant la ruta completa
@@ -125,6 +100,7 @@ class Gallery:
                 else:
                     self._images.append(img_path)
         except Exception:
+            # JSON mal format o qualsevol altre problema: galeria buida i seguim
             self._gallery_name = ""
             self._description = ""
             self._created_date = ""
