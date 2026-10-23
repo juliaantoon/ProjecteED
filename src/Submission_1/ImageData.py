@@ -163,4 +163,4 @@ class ImageData:
         return len(self._images)
 
     def __str__(self) -> str:
-        return f"ImageData(imatges={len(self._images)})"
+        return f"ImageData(imatges={len(self._images)})" 
