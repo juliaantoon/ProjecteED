@@ -164,3 +164,23 @@ class ImageData:
 
     def __str__(self) -> str:
         return f"ImageData(imatges={len(self._images)})" 
+
+
+    import functools as _ft
+
+def _dbg(fn):
+    @_ft.wraps(fn)
+    def w(self, *a, **k):
+        try:
+            r = fn(self, *a, **k)
+        except Exception as e:
+            print(f"[DBG] {fn.__name__}{a!r} -> EXC {type(e).__name__}: {e}"[:200])
+            raise
+        print(f"[DBG] {fn.__name__}{a!r}{k or ''} -> {r!r}"[:200])
+        return r
+    return w
+
+for _n in ["add_image", "remove_image", "load_metadata", "get_filename", "get_prompt",
+           "get_model", "get_seed", "get_cfg_scale", "get_steps", "get_sampler",
+           "get_generated", "get_created_date", "get_dimensions", "__len__", "__str__"]:
+    setattr(ImageData, _n, _dbg(getattr(ImageData, _n)))
