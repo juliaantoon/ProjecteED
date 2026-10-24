@@ -53,11 +53,14 @@ Notes:
 - Els operadors lògics NO modifiquen les llistes originals
 - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
+import cfg
+ 
+ 
 class SearchMetadata:
-
+ 
     def __init__(self, image_data=None):
         self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
-
+ 
     def _cercar(self, nom_getter: str, sub) -> list:  # rep el nom del getter
         llista_uuids = []
         if self._image_data is None or sub is None:
@@ -72,31 +75,31 @@ class SearchMetadata:
                 if str(valor).find(sub_str) != -1:
                     llista_uuids.append(uuid)
         return llista_uuids
-
+ 
     def prompt(self, sub: str) -> list: 
         return self._cercar("get_prompt", sub)                          # busca la subcadena en el camp Prompt de les metadades de les imatges
-
+ 
     def model(self, sub: str) -> list:
         return self._cercar("get_model", sub)                           # busca la subcadena en el camp Model de les metadades de les imatges
-
+ 
     def seed(self, sub: str) -> list:
         return self._cercar("get_seed", sub)                            # busca la subcadena en el camp Seed de les metadades de les imatges
-
+ 
     def cfg_scale(self, sub: str) -> list:
         return self._cercar("get_cfg_scale", sub)                       # busca la subcadena en el camp CFG_Scale de les metadades de les imatges
-
+ 
     def steps(self, sub: str) -> list:
         return self._cercar("get_steps", sub)                           # busca la subcadena en el camp Steps de les metadades de les imatges
-
+ 
     def sampler(self, sub: str) -> list:
         return self._cercar("get_sampler", sub)                         # busca la subcadena en el camp Sampler de les metadades de les imatges
-
+ 
     def date(self, sub: str) -> list:
         return self._cercar("get_created_date", sub)                    # busca la subcadena en el camp Created_Date de les metadades de les imatges
-
+ 
     def generated(self, sub: str) -> list:
         return self._cercar("get_generated", sub) 
-
+ 
     def dimensions(self, width, height) -> list:
         llista_uuids = []
         if self._image_data is None or width is None or height is None:
@@ -110,7 +113,7 @@ class SearchMetadata:
             if dims is not None and tuple(dims) == (w_val, h_val):
                 llista_uuids.append(uuid)
         return llista_uuids
-
+ 
     def and_operator(self, list1: list, list2: list) -> list: # intersecció de conjunts
         if list1 is None or list2 is None:
             return []
@@ -122,7 +125,7 @@ class SearchMetadata:
                 vistos.add(u)
                 resultat.append(u)
         return resultat
-
+ 
     def or_operator(self, list1: list, list2: list) -> list: # unió de conjunts
         if list1 is None and list2 is None:
             return []
@@ -135,7 +138,7 @@ class SearchMetadata:
                 vistos.add(u)
                 resultat.append(u)
         return resultat
-
+ 
     def __str__(self) -> str:
         total = len(self._image_data) if self._image_data else 0
         return f"SearchMetadata(imatges={total})"
