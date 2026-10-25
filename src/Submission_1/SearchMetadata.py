@@ -54,91 +54,129 @@ Notes:
 - Aquests mètodes NO retornen objectes Gallery, sinó llistes simples
 """
 import cfg
- 
- 
+
+
 class SearchMetadata:
- 
+    """Gestiona les cerques de metadades de les imatges."""
+
     def __init__(self, image_data=None):
-        self._image_data = image_data  # instància de la classe ImageData per accedir a les metadades
- 
-    def _cercar(self, nom_getter: str, sub) -> list:  # rep el nom del getter
+        """Inicialitza el cercador amb una referència a ImageData."""
+        self._image_data = image_data  # Instància de ImageData per accedir a les metadades.
+
+    def _cercar(self, nom_getter: str, sub) -> list:
+        """Busca una subcadena en un camp de metadades i retorna els UUID coincidents."""
         llista_uuids = []
+
+        # Comprova que ImageData i el terme de cerca estiguin disponibles.
         if self._image_data is None or sub is None:
             return llista_uuids
+
         sub_str = str(sub)
         getter = getattr(self._image_data, nom_getter, None)
+
         if getter is None:
             return llista_uuids
+
+        # Recorre les imatges registrades i consulta el valor del camp indicat.
         for uuid in getattr(self._image_data, "_images", {}):
             valor = getter(uuid)
             if valor is not None and valor != "None":
                 if str(valor).find(sub_str) != -1:
                     llista_uuids.append(uuid)
+
         return llista_uuids
- 
-    def prompt(self, sub: str) -> list: 
-        return self._cercar("get_prompt", sub)                          # busca la subcadena en el camp Prompt de les metadades de les imatges
- 
+
+    def prompt(self, sub: str) -> list:
+        """Busca imatges que contenen la subcadena indicada al prompt."""
+        return self._cercar("get_prompt", sub)
+
     def model(self, sub: str) -> list:
-        return self._cercar("get_model", sub)                           # busca la subcadena en el camp Model de les metadades de les imatges
- 
+        """Busca imatges segons el model d'IA utilitzat."""
+        return self._cercar("get_model", sub)
+
     def seed(self, sub: str) -> list:
-        return self._cercar("get_seed", sub)                            # busca la subcadena en el camp Seed de les metadades de les imatges
- 
+        """Busca imatges segons la llavor aleatòria utilitzada."""
+        return self._cercar("get_seed", sub)
+
     def cfg_scale(self, sub: str) -> list:
-        return self._cercar("get_cfg_scale", sub)                       # busca la subcadena en el camp CFG_Scale de les metadades de les imatges
- 
+        """Busca imatges segons el valor de CFG Scale."""
+        return self._cercar("get_cfg_scale", sub)
+
     def steps(self, sub: str) -> list:
-        return self._cercar("get_steps", sub)                           # busca la subcadena en el camp Steps de les metadades de les imatges
- 
+        """Busca imatges segons el nombre de passos de generació."""
+        return self._cercar("get_steps", sub)
+
     def sampler(self, sub: str) -> list:
-        return self._cercar("get_sampler", sub)                         # busca la subcadena en el camp Sampler de les metadades de les imatges
- 
+        """Busca imatges segons l'algorisme de mostreig utilitzat."""
+        return self._cercar("get_sampler", sub)
+
     def date(self, sub: str) -> list:
-        return self._cercar("get_created_date", sub)                    # busca la subcadena en el camp Created_Date de les metadades de les imatges
- 
+        """Busca imatges segons la data de creació."""
+        return self._cercar("get_created_date", sub)
+
     def generated(self, sub: str) -> list:
-        return self._cercar("get_generated", sub) 
- 
+        """Busca imatges segons el valor del camp Generated."""
+        return self._cercar("get_generated", sub)
+
     def dimensions(self, width, height) -> list:
+        """Busca imatges que tenen les dimensions indicades."""
         llista_uuids = []
+
+        # Comprova que les dimensions i ImageData estiguin disponibles.
         if self._image_data is None or width is None or height is None:
             return llista_uuids
-        try:                                          
+
+        # Converteix les dimensions a nombres enters.
+        try:
             w_val, h_val = int(width), int(height)
         except (TypeError, ValueError):
             return llista_uuids
+
+        # Compara les dimensions de cada imatge amb les dimensions indicades.
         for uuid in getattr(self._image_data, "_images", {}):
             dims = self._image_data.get_dimensions(uuid)
             if dims is not None and tuple(dims) == (w_val, h_val):
                 llista_uuids.append(uuid)
+
         return llista_uuids
- 
-    def and_operator(self, list1: list, list2: list) -> list: # intersecció de conjunts
+
+    def and_operator(self, list1: list, list2: list) -> list:
+        """Retorna la intersecció de dues llistes d'UUID."""
         if list1 is None or list2 is None:
             return []
+
+        # Conserva els elements comuns sense repetir-los.
         en_list2 = set(list2)
         vistos = set()
         resultat = []
+
         for u in list1:
             if u in en_list2 and u not in vistos:
                 vistos.add(u)
                 resultat.append(u)
+
         return resultat
- 
-    def or_operator(self, list1: list, list2: list) -> list: # unió de conjunts
+
+    def or_operator(self, list1: list, list2: list) -> list:
+        """Retorna la unió de dues llistes d'UUID sense duplicats."""
         if list1 is None and list2 is None:
             return []
+
         l1 = list1 if list1 is not None else []
         l2 = list2 if list2 is not None else []
+
+        # Combina les dues llistes i elimina els elements repetits.
         vistos = set()
         resultat = []
+
         for u in l1 + l2:
             if u not in vistos:
                 vistos.add(u)
                 resultat.append(u)
+
         return resultat
- 
+
     def __str__(self) -> str:
+        """Retorna una representació textual del cercador."""
         total = len(self._image_data) if self._image_data else 0
         return f"SearchMetadata(imatges={total})"

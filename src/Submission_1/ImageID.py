@@ -33,38 +33,52 @@ Notes:
 """
 import cfg
 
-class ImageID:
-    def __init__(self):
-        self._file_to_uuid = {}        # diccionari per saber quin uuid té cada fitxer
-        self._active_uuids = set()     # conjunt per saber quins uuid estan actius (evita duplicats)
-        self._uuid_to_file = {}        # diccionari per saber quin fitxer té cada uuid (per fer cerques inverses)
-    
-    def generate_uuid(self, file: str) -> str:
-        new_uuid = str(cfg.get_uuid(file))  # generem un nou uuid 
 
-        if new_uuid in self._active_uuids:  # comprovem si ja existeix (col·lisió)
+class ImageID:
+    """Gestiona la generació i l'associació d'identificadors UUID."""
+
+    def __init__(self):
+        """Inicialitza els diccionaris i conjunts d'identificadors."""
+        self._file_to_uuid = {}  # Diccionari que associa cada fitxer amb el seu UUID.
+        self._active_uuids = set()  # Conjunt d'UUID actius per evitar duplicats.
+        self._uuid_to_file = {}  # Diccionari per consultar el fitxer a partir d'un UUID.
+
+    def generate_uuid(self, file: str) -> str:
+        """Genera un UUID per a un fitxer i registra la seva associació."""
+        new_uuid = str(cfg.get_uuid(file))
+
+        # Comprova si l'UUID generat ja està assignat a un altre fitxer.
+        if new_uuid in self._active_uuids:
             print(f"Error: UUID {new_uuid} ja existeix per a un altre fitxer.")
             return None
         else:
-            self._active_uuids.add(new_uuid) # afegim el nou uuid al conjunt d'uuids actius
-            self._file_to_uuid[file] = new_uuid # associem el fitxer amb el nou uuid
-            self._uuid_to_file[new_uuid] = file # associem el nou uuid amb el fitxer corresponent
-            return new_uuid # retornem el nou uuid generat
+            # Registra l'UUID i les associacions entre UUID i fitxer.
+            self._active_uuids.add(new_uuid)
+            self._file_to_uuid[file] = new_uuid
+            self._uuid_to_file[new_uuid] = file
+            return new_uuid
 
-    def get_uuid(self, file: str) -> str: # retorna l'uuid associat a un fitxer si existeix, sino retorna None
-        if file in self._file_to_uuid: # comprova si la ruta file es clau del diccionari _file_to_uuid
-            return self._file_to_uuid[file] # si es retorna el uuid associat
+    def get_uuid(self, file: str) -> str:
+        """Retorna l'UUID associat a un fitxer, si existeix."""
+        if file in self._file_to_uuid:
+            return self._file_to_uuid[file]
         else:
-            return None # si no s'ha registrat mai retorna None
+            return None
 
     def remove_uuid(self, uuid: str) -> None:
-        if uuid in self._active_uuids: # comproba si l'uuid està actiu
-            self._active_uuids.remove(uuid) # si hi es, s'elimina del conjunt d'uuids actius
-            file = self._uuid_to_file.pop(uuid, None) # tmb l'esborra del diccionari invers _uuid_to_file
-            if file is not None: # tmb s'elimina del diccionari _file_to_uuid 
-                self._file_to_uuid.pop(file, None) 
-    
+        """Elimina un UUID actiu i les seves associacions."""
+        if uuid in self._active_uuids:
+            self._active_uuids.remove(uuid)
+
+            # Elimina l'associació inversa entre l'UUID i el fitxer.
+            file = self._uuid_to_file.pop(uuid, None)
+            if file is not None:
+                self._file_to_uuid.pop(file, None)
+
     def __len__(self) -> int:
-        return len(self._file_to_uuid) # retorna el nombre d'identificadors actius (UUID) en aquell moment
+        """Retorna el nombre d'identificadors UUID actius."""
+        return len(self._file_to_uuid)
+
     def __str__(self) -> str:
-        return f"ImageID(identificadors={len(self._file_to_uuid)})" 
+        """Retorna una representació textual dels identificadors."""
+        return f"ImageID(identificadors={len(self._file_to_uuid)})"
