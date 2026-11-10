@@ -49,7 +49,7 @@ from PIL import Image
 
 
 class ImageViewer:
-    """Gestiona la visualització de les imatges i les seves metadades."""
+    """Gestiona la visualització de les imatges i les seves metadades.""" ## no emmagatzema ni gesiona, nomes les mostra a l'usuari
 
     def __init__(self, image_data=None):
         """Inicialitza el visualitzador amb una referència a ImageData."""

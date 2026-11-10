@@ -18,12 +18,12 @@ import cfg
 
 
 class ImageData:
-    """Gestiona les dades i les metadades de les imatges."""
+    """Gestiona les dades i les metadades de les imatges.""" ## s'encarrega de emmagatzemar la info de cada imatge (nom,prompt,model...)
 
     def __init__(self, image_id=None):
         """Inicialitza el diccionari d'imatges i la referència a ImageID."""
         self._images = {}  # Diccionari amb les dades de cada imatge, identificada pel seu UUID.
-        self._image_id = image_id  # Referència a la classe ImageID.
+        self._image_id = image_id  # Referència a la classe ImageID. Perque la ImageData pugui utilitzar la classe ImageID per obtenir els UUID de les imatges.
 
     def add_image(self, uuid: str, file: str) -> None:
         """Registra una imatge sense llegir encara les seves dades del disc."""
@@ -31,12 +31,12 @@ class ImageData:
             return
 
         # Comprova que els arguments siguin cadenes de text no buides.
-        if not isinstance(uuid, str) or not isinstance(file, str):
+        if not isinstance(uuid, str) or not isinstance(file, str):## uuid es una caadena de text? file es una cadena de text?
             return
         if not uuid or not file:
             return
 
-        u = uuid
+        u = uuid ## per veure si ya existeix l'uuid dins del diccionari d'imatges. Si ja existeix, no fa res. Per no repetir.
         if u in self._images:
             return
 
@@ -56,11 +56,11 @@ class ImageData:
 
     def remove_image(self, uuid: str) -> None:
         """Elimina una imatge del registre a partir del seu UUID."""
-        u = str(uuid)
+        u = str(uuid) ## lo pasamos porque la clave del diccionario es tmb un str
         if u in self._images:
             del self._images[u]
 
-    def load_metadata(self, uuid: str) -> None:
+    def load_metadata(self, uuid: str) -> None: ## llegeix les metadades d'una imatge a partir del seu UUID i les guarda dins del diccionari _images
         """Carrega les dimensions i les metadades d'una imatge."""
         u = str(uuid)
 

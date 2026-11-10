@@ -43,7 +43,7 @@ class ImageFiles:
         self._path = None  # Directori que es vol explorar.
 
     def reload_fs(self, path: str = None) -> None:
-        """Actualitza el registre de fitxers PNG del sistema."""
+        """Actualitza el registre de fitxers PNG del sistema i detecta canvis."""
         # Estableix el directori que s'ha d'explorar.
         if path is not None:
             self._path = path
@@ -58,7 +58,7 @@ class ImageFiles:
             for r, dirs, files in os.walk(base_dir):
                 for file in files:
                     if file.lower().endswith(".png"):
-                        full_path = os.path.join(r, file)
+                        full_path = os.path.join(r, file) ## Unimos la ruta de la carpeta actual con el nombre del archivo.
 
                         # Obté la ruta absoluta i normalitza els separadors.
                         rel_path = os.path.abspath(full_path)
@@ -68,7 +68,7 @@ class ImageFiles:
         # Compara els fitxers actuals amb els de l'última actualització.
         self._added = sorted(list(new_files - self._files))
         self._removed = sorted(list(self._files - new_files))
-        self._files = new_files
+        self._files = new_files ## devuelve los elementos que estan en el conjunto nuevo pero no en el anterior, y viceversa. De esta manera, se detectan los archivos añadidos y eliminados.
 
     def files_added(self) -> list:
         """Retorna la llista de fitxers afegits en l'última actualització."""

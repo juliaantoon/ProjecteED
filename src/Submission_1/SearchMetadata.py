@@ -56,7 +56,7 @@ Notes:
 import cfg
 
 
-class SearchMetadata:
+class SearchMetadata: ## busca segons la metadada que li diguis i retorna una llista amb els UUID de les imatges que compleixen el criteri de cerca
     """Gestiona les cerques de metadades de les imatges."""
 
     def __init__(self, image_data=None):

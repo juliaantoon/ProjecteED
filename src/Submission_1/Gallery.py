@@ -68,7 +68,7 @@ class Gallery:
         # Prepara diferents formats de ruta per buscar l'UUID.
         candidats = [norm_p]
         if norm_p.startswith(root_dir_name + "/"):
-            candidats.append(norm_p[len(root_dir_name) + 1:])
+            candidats.append(norm_p[len(root_dir_name) + 1:]) ## +1 para contar la barra
         else:
             candidats.append(f"{root_dir_name}/{norm_p}")
         candidats.append(os.path.basename(norm_p))
@@ -107,16 +107,16 @@ class Gallery:
             self._description = str(data.get("description", ""))
             self._created_date = str(data.get("created_date", ""))
 
-            raw_images = data.get("images", [])
+            raw_images = data.get("images", []) ## busca una clau dins del diccionari
 
             # Obté els UUID de les imatges i els afegeix a la galeria.
-            for img_path in raw_images:
-                if self._image_id is not None:
+            for img_path in raw_images: ## recorre la llista d'imatges dins del JSON
+                if self._image_id is not None: ## comprova si hi ha un gestor d'UUID disponible
                     uuid = self._find_uuid(img_path)
                     if uuid:
-                        self._images.append(uuid)
+                        self._images.append(uuid) ## si troba l'UUID, s'afegeix a la galeria
                 else:
-                    self._images.append(img_path)
+                    self._images.append(img_path) ## si no hi ha gestor d'UUID, s'afegeix la ruta de la imatge directament
 
         except Exception:
             # Reinicialitza la galeria si es produeix un error.
